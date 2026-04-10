@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1565C0">
+    <title>工点详情</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+</head>
+<body>
+    <!-- 主页面 -->
+    <div id="main-page" class="page">
+        <header class="header">
+            <button class="btn-icon" onclick="history.back()" style="color: #fff;">←</button>
+            <h2 id="page-title">工点详情</h2>
+            <div class="header-actions">
+                <button id="btn-members" class="btn-icon" title="成员管理" style="color: #fff;">👥</button>
+                <button id="btn-refresh" class="btn-icon" title="刷新" style="color: #fff;">🔄</button>
+            </div>
+        </header>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <select id="filter-type" class="filter-select">
+                <option value="">全部分类</option>
+                <option value="大中型设备">大中型设备</option>
+                <option value="特种设备">特种设备</option>
+            </select>
+            <select id="filter-status" class="filter-select">
+                <option value="">全部状态</option>
+                <option value="正常">正常</option>
+                <option value="维修中">维修中</option>
+                <option value="报废">报废</option>
+            </select>
+            <input type="text" id="filter-search" class="filter-input" placeholder="🔍 搜索设备名称">
+        </div>
+
+        <div class="content">
+            <div id="device-list" class="list-container">
+                <!-- 设备列表 -->
+            </div>
+        </div>
+
+        <button id="btn-add-device" class="fab" title="添加设备">➕</button>
+    </div>
+
+    <!-- 添加/编辑设备弹窗 -->
+    <div id="device-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="device-modal-title">添加设备</h3>
+                <button class="modal-close" data-close="device-modal">×</button>
+            </div>
+            <form id="device-form" class="modal-form">
+                <input type="hidden" id="device-id">
+                <div class="form-group">
+                    <label for="device-name">设备名称</label>
+                    <input type="text" id="device-name" placeholder="如：混凝土搅拌机" required>
+                </div>
+                <div class="form-group">
+                    <label for="device-type">设备类别</label>
+                    <select id="device-type">
+                        <option value="大中型设备">大中型设备</option>
+                        <option value="特种设备">特种设备</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="device-status">状态</label>
+                    <select id="device-status">
+                        <option value="正常">正常</option>
+                        <option value="维修中">维修中</option>
+                        <option value="报废">报废</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="device-description">备注</label>
+                    <textarea id="device-description" placeholder="可选：型号、规格、进场日期等"></textarea>
+                </div>
+                <div id="device-limit-info" class="limit-info"></div>
+                <button type="submit" class="btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 成员管理弹窗 -->
+    <div id="members-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>成员管理</h3>
+                <button class="modal-close" data-close="members-modal">×</button>
+            </div>
+            <div class="modal-form">
+                <div class="form-group">
+                    <label for="invite-email">添加成员（邮箱）</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="email" id="invite-email" placeholder="输入邮箱地址" style="flex: 1;">
+                        <select id="invite-role" style="width: 100px;">
+                            <option value="editor">可编辑</option>
+                            <option value="viewer">只读</option>
+                        </select>
+                    </div>
+                    <button id="btn-invite" class="btn-primary" style="margin-top: 8px;">添加</button>
+                </div>
+                <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;">
+                <div id="member-list" class="member-list">
+                    <!-- 成员列表 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除弹窗 -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+            </div>
+            <p id="confirm-message" class="modal-message"></p>
+            <div class="modal-actions">
+                <button class="btn-secondary" data-close="confirm-modal">取消</button>
+                <button id="confirm-ok" class="btn-danger">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/worksite.js"></script>
+</body>
+</html>

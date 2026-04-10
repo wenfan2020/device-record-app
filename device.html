@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1565C0">
+    <title>设备详情</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+</head>
+<body>
+    <div id="main-page" class="page">
+        <header class="header">
+            <button class="btn-icon" onclick="history.back()" style="color: #fff;">←</button>
+            <h2 id="page-title">设备详情</h2>
+            <div class="header-actions">
+                <button id="btn-refresh" class="btn-icon" title="刷新" style="color: #fff;">🔄</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- 设备信息 -->
+            <div id="device-info" class="card" style="margin-bottom: 16px;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span id="device-status-indicator" class="device-status normal"></span>
+                        <span id="device-name">加载中...</span>
+                        <span id="device-type-badge" class="type-badge"></span>
+                    </div>
+                    <div id="device-actions" class="card-actions hidden">
+                        <button id="btn-edit-device" title="编辑">✏️</button>
+                    </div>
+                </div>
+                <div id="device-meta" class="card-meta"></div>
+                <div id="device-description" style="margin-top: 12px; font-size: 14px; color: #666;"></div>
+            </div>
+
+            <!-- 照片区域 -->
+            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 16px;">📷 照片 (<span id="photo-count">0</span>)</h3>
+                <button id="btn-add-photo" class="btn-primary" style="width: auto; padding: 8px 16px; font-size: 14px;">拍照/上传</button>
+            </div>
+
+            <div id="photo-grid" class="photo-grid">
+                <!-- 照片动态加载 -->
+            </div>
+        </div>
+
+        <input type="file" id="photo-input" accept="image/*" capture="environment" multiple style="display: none;">
+    </div>
+
+    <!-- 编辑设备弹窗 -->
+    <div id="device-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑设备</h3>
+                <button class="modal-close" data-close="device-modal">×</button>
+            </div>
+            <form id="device-form" class="modal-form">
+                <input type="hidden" id="device-id">
+                <div class="form-group">
+                    <label for="device-name-input">设备名称</label>
+                    <input type="text" id="device-name-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="device-type">设备类别</label>
+                    <select id="device-type">
+                        <option value="大中型设备">大中型设备</option>
+                        <option value="特种设备">特种设备</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="device-status">状态</label>
+                    <select id="device-status">
+                        <option value="正常">正常</option>
+                        <option value="维修中">维修中</option>
+                        <option value="报废">报废</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="device-description">备注</label>
+                    <textarea id="device-description"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 照片查看器 -->
+    <div id="photo-viewer" class="photo-viewer hidden" onclick="closePhotoViewer()">
+        <button class="photo-viewer-close" onclick="closePhotoViewer()">×</button>
+        <img id="photo-viewer-img" src="" alt="照片">
+    </div>
+
+    <!-- 确认删除照片弹窗 -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+            </div>
+            <p class="modal-message">确定要删除这张照片吗？</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" data-close="confirm-modal">取消</button>
+                <button id="confirm-ok" class="btn-danger">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/device.js"></script>
+</body>
+</html>

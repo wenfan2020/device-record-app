@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1565C0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>CZ12标设备管理</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="login-page" class="page">
+        <div class="login-container">
+            <div class="logo">
+                <h1>🏗️ CZ12标设备管理</h1>
+                <p>川藏铁路雅安至林芝段 CZSCZQ-12标</p>
+            </div>
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input type="email" id="email" placeholder="请输入邮箱" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">姓名（首次注册填写）</label>
+                    <input type="text" id="name" placeholder="请输入姓名">
+                </div>
+                <button type="submit" class="btn-primary">登录 / 注册</button>
+            </form>
+            <p class="auth-switch">首次使用将自动注册</p>
+        </div>
+    </div>
+
+    <!-- 主页面 - 工点列表 -->
+    <div id="main-page" class="page hidden">
+        <header class="header">
+            <h2>🏗️ CZ12标设备管理</h2>
+            <div class="header-actions">
+                <button id="btn-refresh" class="btn-icon" title="刷新">🔄</button>
+                <button id="btn-logout" class="btn-icon" title="退出">🚪</button>
+            </div>
+        </header>
+        
+        <div class="user-info">
+            <span id="user-name">未登录</span>
+            <span id="user-role" class="role-badge" style="margin-left: 8px;"></span>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <select id="filter-org" class="filter-select">
+                <option value="">全部单位</option>
+                <option value="局指">局指</option>
+                <option value="一分部">一分部</option>
+                <option value="二分部">二分部</option>
+            </select>
+            <select id="filter-type" class="filter-select">
+                <option value="">全部分类</option>
+                <option value="大中型设备">大中型设备</option>
+                <option value="特种设备">特种设备</option>
+            </select>
+            <input type="text" id="filter-search" class="filter-input" placeholder="🔍 搜索设备名称">
+        </div>
+
+        <div class="content">
+            <div id="worksite-list" class="list-container">
+                <!-- 工点列表动态加载 -->
+            </div>
+        </div>
+
+        <button id="btn-add-worksite" class="fab" title="添加工点">➕</button>
+    </div>
+
+    <!-- 添加/编辑工点弹窗 -->
+    <div id="worksite-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="worksite-modal-title">添加工点</h3>
+                <button class="modal-close" data-close="worksite-modal">×</button>
+            </div>
+            <form id="worksite-form" class="modal-form">
+                <input type="hidden" id="worksite-id">
+                <div class="form-group">
+                    <label for="worksite-org">所属单位</label>
+                    <select id="worksite-org" required>
+                        <option value="局指">局指</option>
+                        <option value="一分部">一分部</option>
+                        <option value="二分部">二分部</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="worksite-name">工点名称</label>
+                    <input type="text" id="worksite-name" placeholder="如：一号拌合站" required>
+                </div>
+                <div id="device-limit-info" class="limit-info"></div>
+                <button type="submit" class="btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认删除弹窗 -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+            </div>
+            <p id="confirm-message" class="modal-message"></p>
+            <div class="modal-actions">
+                <button class="btn-secondary" data-close="confirm-modal">取消</button>
+                <button id="confirm-ok" class="btn-danger">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
