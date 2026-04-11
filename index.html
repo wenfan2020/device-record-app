@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>设备管理系统 - 登录</title>
+  <title>CZ12标设备管理系统 - 登录</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     .container { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); width: 380px; max-width: 95vw; }
-    h1 { font-size: 22px; text-align: center; margin-bottom: 8px; color: #1a73e8; }
-    .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 30px; }
+    h1 { font-size: 22px; text-align: center; margin-bottom: 6px; color: #1a73e8; }
+    .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 28px; }
     .tabs { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 24px; }
     .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #666; font-size: 15px; transition: all 0.2s; }
     .tab.active { color: #1a73e8; border-bottom: 2px solid #1a73e8; margin-bottom: -2px; }
@@ -20,20 +20,20 @@
     button { width: 100%; padding: 12px; background: #1a73e8; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
     button:hover { background: #1557b0; }
     button:disabled { background: #a0a0a0; cursor: not-allowed; }
-    .msg { padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; display: none; }
+    .msg { padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; display: none; line-height: 1.6; }
     .msg.error { background: #fce8e6; color: #c5221f; border: 1px solid #fdc; }
     .msg.success { background: #e6f4ea; color: #137333; border: 1px solid #acd; }
     .msg.info { background: #e8f0fe; color: #1a73e8; border: 1px solid #bcd; }
     .link { text-align: center; margin-top: 16px; font-size: 13px; color: #666; }
     .link a { color: #1a73e8; text-decoration: none; }
-    .back-link { text-align: center; margin-top: 12px; font-size: 13px; }
-    .back-link a { color: #666; text-decoration: none; }
+    .admin-note { text-align: center; margin-top: 12px; font-size: 12px; color: #999; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🏗️ CZ12设备管理系统</h1>
-    <p class="subtitle">川藏铁路雅安至林芝段</p>
+    <h1>🏗️ CZ12标设备管理</h1>
+    <p class="subtitle">川藏铁路雅安至林芝段 CZSCZQ-12标</p>
+
     <div class="tabs">
       <div class="tab active" id="tabLogin" onclick="showTab('login')">登录</div>
       <div class="tab" id="tabRegister" onclick="showTab('register')">注册</div>
@@ -72,10 +72,10 @@
     </form>
 
     <div class="link">
-      <a href="main.html">👉 免登录查看工点列表</a>
+      <a href="main.html">→ 不登录，直接查看设备列表</a>
     </div>
-    <div class="back-link">
-      <a href="main.html">← 返回查看页面</a>
+    <div class="admin-note">
+      注册后需管理员审批才能登录使用
     </div>
   </div>
 
@@ -109,29 +109,35 @@
       const password = document.getElementById('loginPassword').value;
 
       try {
+        // 1. 先登录
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
-        // 检查是否已审批
+        // 2. 用 email 查询审批状态
         const { data: approved, error: apprErr } = await sb
           .from('approved_users')
           .select('*')
-          .eq('user_id', data.user.id)
+          .eq('email', email)
           .maybeSingle();
 
-        if (apprErr) throw apprErr;
-        if (!approved) {
+        if (apprErr) {
+          // 表可能不存在，尝试忽略
+          console.warn('审批表查询失败:', apprErr.message);
+        }
+
+        if (!approved || !approved.approved) {
           await sb.auth.signOut();
-          showMsg('⚠️ 您的账号尚未通过审批，请联系管理员（18006855@qq.com）', 'error');
+          showMsg('⚠️ 您的账号尚未通过审批，请联系管理员。\n管理员邮箱：18006855@qq.com', 'error');
           btn.disabled = false;
           btn.textContent = '登录';
           return;
         }
 
-        // 登录成功，写入session
+        // 登录成功
         sessionStorage.setItem('user_id', data.user.id);
         sessionStorage.setItem('user_email', data.user.email);
-        showMsg('✅ 登录成功！正在跳转...', 'success');
+        sessionStorage.setItem('user_name', approved.name || '');
+        showMsg('✅ 登录成功，页面跳转中...', 'success');
         setTimeout(() => window.location.href = 'main.html', 800);
       } catch (err) {
         showMsg('❌ 登录失败：' + err.message, 'error');
@@ -148,11 +154,11 @@
       const password2 = document.getElementById('regPassword2').value;
 
       if (password !== password2) {
-        showMsg('❌ 两次密码输入不一致', 'error');
+        showMsg('⚠️ 两次密码输入不一致', 'error');
         return;
       }
       if (password.length < 6) {
-        showMsg('❌ 密码长度至少6位', 'error');
+        showMsg('⚠️ 密码长度不能少于6位', 'error');
         return;
       }
 
@@ -163,7 +169,7 @@
         const { data, error } = await sb.auth.signUp({ email, password });
         if (error) throw error;
 
-        showMsg('📧 注册成功！请等待管理员审批后登录。\n（管理员邮箱：18006855@qq.com）', 'info');
+        showMsg('📩 注册成功！\n请等待管理员（18006855@qq.com）审批后登录。', 'info');
         document.getElementById('registerForm').reset();
         btn.disabled = false;
         btn.textContent = '注册';
