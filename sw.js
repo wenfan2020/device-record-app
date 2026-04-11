@@ -2,19 +2,19 @@
  * Service Worker - 离线缓存
  */
 
-const CACHE_NAME = 'device-record-v2';
+const CACHE_NAME = 'device-record-v3';
 const urlsToCache = [
   '/',
   '/index.html',
   '/worksite.html',
   '/device.html',
   '/css/style.css',
+  '/js/supabase-sdk.min.js',
   '/js/supabase-config.js',
   '/js/auth.js',
   '/js/app.js',
   '/js/worksite.js',
-  '/js/device.js',
-  'https://cdn.bootcdn.net/ajax/libs/supabase-js/2.39.0/supabase-umd.min.js'
+  '/js/device.js'
 ];
 
 // 安装
@@ -49,8 +49,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // 跳过跨域请求
   if (!event.request.url.startsWith(self.location.origin) && 
-      !event.request.url.includes('supabase.io') &&
-      !event.request.url.includes('jsdelivr.net') && !event.request.url.includes('bootcdn.net')) {
+      !event.request.url.includes('supabase.io')) {
     return;
   }
 
