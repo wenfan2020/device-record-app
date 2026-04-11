@@ -21,3 +21,6 @@ function initSupabase() {
 console.log('%c⚙️ CZ12标设备管理 - Supabase 配置', 'font-size: 16px; font-weight: bold;');
 console.log('请在 js/supabase-config.js 中配置您的 Supabase 连接信息');
 console.log('访问 https://supabase.com 创建免费项目');
+
+// 自动初始化 Supabase
+initSupabase();
