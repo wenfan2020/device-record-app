@@ -404,10 +404,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await checkSession();
-    if (!currentUser) return;
-
+    
     await loadDeviceInfo();
     await loadPhotos();
+
+    if (!currentUser) {
+        // 访客模式：隐藏编辑相关按钮
+        document.getElementById('btn-add-photo')?.style && (document.getElementById('btn-add-photo').style.display = 'none');
+        document.getElementById('btn-edit-device')?.style && (document.getElementById('btn-edit-device').style.display = 'none');
+        return;
+    }
 
     // 事件绑定
     document.getElementById('btn-refresh')?.addEventListener('click', () => {
