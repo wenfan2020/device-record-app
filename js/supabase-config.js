@@ -1,5 +1,5 @@
 /**
- * Supabase 配置
+ * Supabase 配置 - 必须先加载
  */
 
 const SUPABASE_URL = 'https://thvpdhayyyfgddzwffzv.supabase.co';
@@ -7,36 +7,51 @@ const SUPABASE_ANON_KEY = 'sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
 
 let supabase = null;
 
+/**
+ * 初始化 Supabase 客户端
+ */
 function initSupabase() {
-    console.log('[Supabase Config] Checking SDK status...');
-    console.log('[Supabase Config] window.supabase type:', typeof window.supabase);
-    console.log('[Supabase Config] window.supabase value:', window.supabase);
+    console.log('[Supabase] 初始化中...');
     
-    if (typeof window.supabase !== 'undefined') {
-        console.log('[Supabase Config] SDK loaded, creating client...');
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('[Supabase Config] Client created. supabase.auth:', typeof supabase.auth);
-        console.log('✅ Supabase 初始化成功');
-        return true;
-    } else {
-        console.error('❌ Supabase SDK 未加载！');
-        console.error('尝试直接使用 supabase 全局（如果有）...');
-        if (typeof supabase !== 'undefined' && supabase && supabase.auth) {
-            console.log('使用已有的 supabase 全局');
+    // 等待 SDK 加载
+    function waitForSDK(retries = 10) {
+        if (typeof window.supabase !== 'undefined') {
+            console.log('[Supabase] SDK 已就绪');
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('[Supabase] 客户端创建成功');
             return true;
         }
-        document.getElementById('toast')?.classList.remove('hidden');
-        document.getElementById('toast').textContent = 'SDK加载失败，请刷新页面或联系管理员';
-        document.getElementById('toast').style.background = '#e74c3c';
-        setTimeout(() => document.getElementById('toast')?.classList.add('hidden'), 5000);
+        if (retries > 0) {
+            console.log(`[Supabase] 等待 SDK 加载... (剩余 ${retries} 次)`);
+            setTimeout(() => waitForSDK(retries - 1), 200);
+            return false;
+        }
+        console.error('[Supabase] SDK 加载失败！');
         return false;
+    }
+    
+    if (typeof window.supabase === 'undefined') {
+        console.warn('[Supabase] SDK 未定义，尝试加载...');
+        // 动态加载 SDK
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+            console.log('[Supabase] SDK 动态加载完成');
+            waitForSDK();
+        };
+        script.onerror = () => {
+            console.error('[Supabase] SDK 加载失败');
+        };
+        document.head.appendChild(script);
+    } else {
+        waitForSDK();
     }
 }
 
 console.log('%c⚙️ CZ12标设备管理 - Supabase 配置', 'font-size: 16px; font-weight: bold;');
 console.log('Supabase URL:', SUPABASE_URL);
 
-// 等待 DOM 加载完成再初始化
+// 页面加载后初始化
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSupabase);
 } else {
