@@ -4,222 +4,653 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1565C0">
-    <title>CZ12标设备管理</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css">
+    <title>CZ12标设备管理系统</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
-        .page { display: none; }
-        .page:not(.hidden) { display: block; }
-        .hidden { display: none !important; }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+        .page{display:none}.page.active{display:block}
         
         /* 登录页 */
-        .login-container { max-width: 400px; margin: 80px auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); text-align: center; }
-        .login-container h1 { font-size: 20px; color: #1565C0; margin-bottom: 8px; }
-        .login-container p { color: #666; font-size: 14px; margin-bottom: 24px; }
-        .login-form .form-group { margin-bottom: 16px; text-align: left; }
-        .login-form label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; font-weight: 500; }
-        .login-form input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
-        .login-form input:focus { outline: none; border-color: #1565C0; }
-        .btn-primary { width: 100%; padding: 14px; background: #1565C0; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        .btn-primary:active { background: #0d47a1; }
-        .admin-note { margin-top: 20px; padding: 12px; background: #e3f2fd; border-radius: 8px; font-size: 13px; color: #1565C0; }
+        .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .login-box{background:#fff;border-radius:16px;padding:40px 30px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.1)}
+        .login-box h1{font-size:22px;color:#1565C0;margin-bottom:6px;text-align:center}
+        .login-box p{color:#888;font-size:13px;margin-bottom:30px;text-align:center}
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;font-size:14px;color:#555;margin-bottom:6px;font-weight:500}
+        .form-group input,.form-group select{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;transition:border-color 0.2s}
+        .form-group input:focus,.form-group select:focus{outline:none;border-color:#1565C0}
+        .btn{width:100%;padding:14px;background:#1565C0;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-weight:500}
+        .btn:active{background:#0d47a1}
+        .btn-secondary{background:#f5f5f5;color:#666}
+        .hint{background:#e3f2fd;border-radius:10px;padding:14px;margin-top:20px;font-size:13px;color:#1565C0;line-height:1.6}
+        .hint strong{display:block;margin-bottom:4px}
         
         /* 主页 */
-        .header { background: #1565C0; color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
-        .header h2 { font-size: 17px; flex: 1; }
-        .header-actions { display: flex; gap: 8px; }
-        .btn-icon { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px; }
-        .btn-icon:active { background: rgba(255,255,255,0.3); }
-        .user-info { padding: 8px 16px; background: #fff; border-bottom: 1px solid #eee; font-size: 13px; color: #666; }
-        .filter-bar { padding: 10px 16px; background: #fff; border-bottom: 1px solid #eee; display: flex; gap: 8px; flex-wrap: wrap; }
-        .filter-bar select, .filter-bar input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .filter-bar select { min-width: 100px; }
-        .filter-bar input { flex: 1; min-width: 150px; }
-        .content { padding: 16px; }
-        .loading { text-align: center; padding: 40px; color: #999; }
-        .empty-state { text-align: center; padding: 60px 20px; }
-        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-        .empty-state p { color: #666; font-size: 15px; }
+        .header{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(21,101,192,0.3)}
+        .header h2{font-size:18px;flex:1}
+        .header-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer}
+        .header-btn:active{background:rgba(255,255,255,0.3)}
+        
+        .user-bar{background:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#666;border-bottom:1px solid #eee}
+        .user-bar .badge{background:#e3f2fd;color:#1565C0;padding:3px 10px;border-radius:12px;font-size:12px}
+        
+        .filter{background:#fff;padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #eee}
+        .filter select,.filter input{flex:1;min-width:100px;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+        .filter select{min-width:80px;flex:none}
+        
+        .content{padding:16px}
         
         /* 卡片 */
-        .card { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: pointer; }
-        .card:active { background: #f8f8f8; }
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .card-title { font-size: 15px; font-weight: 500; color: #333; }
-        .card-actions button { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; }
-        .card-meta { font-size: 13px; color: #888; margin-top: 4px; }
-        .card-stats { font-size: 13px; color: #888; margin-top: 6px; }
-        .org-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 6px; }
-        .org-badge.juzhi { background: #e3f2fd; color: #1565C0; }
-        .org-badge.yifenbu { background: #e8f5e9; color: #2e7d32; }
-        .org-badge.erfenbu { background: #fff3e0; color: #e65100; }
-        .type-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 6px; background: #f5f5f5; color: #666; }
-        .type-badge.large { background: #e3f2fd; color: #1565C0; }
-        .type-badge.special { background: #fce4ec; color: #c62828; }
+        .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;transition:transform 0.1s,box-shadow 0.1s}
+        .card:active{transform:scale(0.99);box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+        .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+        .card-title{font-size:15px;font-weight:600;color:#222}
+        .card-actions{display:flex;gap:4px}
+        .card-actions button{background:none;border:none;font-size:16px;cursor:pointer;padding:4px 6px;border-radius:6px}
+        .card-actions button:active{background:#f0f0f0}
+        .card-meta{font-size:13px;color:#888;margin-top:4px}
+        .card-foot{font-size:12px;color:#aaa;margin-top:8px;padding-top:8px;border-top:1px solid #f5f5f5}
+        
+        .org-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;font-weight:500}
+        .org-juzhi{background:#e3f2fd;color:#1565C0}
+        .org-yifenbu{background:#e8f5e9;color:#2e7d32}
+        .org-erfenbu{background:#fff3e0;color:#e65100}
+        .type-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;background:#f5f5f5;color:#666}
+        .type-large{background:#e3f2fd;color:#1565C0}
+        .type-special{background:#fce4ec;color:#c62828}
+        .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+        .status-normal{background:#4caf50}
+        .status-repair{background:#ff9800}
+        .status-scrap{background:#f44336}
+        
+        /* 空状态 */
+        .empty{text-align:center;padding:60px 20px}
+        .empty-icon{font-size:56px;margin-bottom:12px}
+        .empty p{color:#999;font-size:15px}
         
         /* 浮动按钮 */
-        .fab { position: fixed; right: 20px; bottom: 24px; width: 54px; height: 54px; background: #1565C0; color: #fff; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(21,101,192,0.4); }
-        .fab:active { transform: scale(0.95); }
+        .fab{position:fixed;right:20px;bottom:24px;width:56px;height:56px;background:#1565C0;color:#fff;border:none;border-radius:50%;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(21,101,192,0.4);transition:transform 0.2s}
+        .fab:active{transform:scale(0.95)}
         
         /* 弹窗 */
-        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: #fff; border-radius: 12px; width: 90%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { font-size: 17px; }
-        .modal-close { background: none; border: none; font-size: 24px; color: #999; cursor: pointer; }
-        .modal-form { padding: 20px; }
-        .modal-form .form-group { margin-bottom: 14px; }
-        .modal-form label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; }
-        .modal-form input, .modal-form select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; }
-        .modal-form input:focus, .modal-form select:focus { outline: none; border-color: #1565C0; }
+        .modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+        .modal.hidden{display:none}
+        .modal-box{background:#fff;border-radius:16px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+        .modal-head{padding:18px 20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+        .modal-head h3{font-size:17px}
+        .modal-close{background:none;border:none;font-size:26px;color:#aaa;cursor:pointer;line-height:1}
+        .modal-close:active{color:#666}
+        .modal-body{padding:20px}
+        .modal-body .form-group{margin-bottom:14px}
+        .modal-foot{padding:16px 20px;border-top:1px solid #eee;display:flex;gap:10px}
+        .modal-foot .btn{flex:1}
         
         /* Toast */
-        .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0.9; }
+        .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;z-index:300;opacity:0.95;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
         
-        /* 访客提示 */
-        .guest-banner { background: #fff8e1; padding: 8px 16px; font-size: 13px; color: #f57c00; text-align: center; }
-        .guest-banner a { color: #1565C0; }
+        /* 加载 */
+        .loading{text-align:center;padding:40px;color:#999}
+        
+        /* 确认弹窗 */
+        .confirm-box{background:#fff;border-radius:16px;width:100%;max-width:320px;padding:24px;text-align:center}
+        .confirm-box p{font-size:15px;color:#333;margin-bottom:20px;line-height:1.5}
+        .confirm-box .btn-row{display:flex;gap:10px}
+        .confirm-box .btn{flex:1}
+        .btn-cancel{background:#f5f5f5;color:#666}
+        .btn-danger{background:#e53935;color:#fff}
+        
+        /* 返回按钮 */
+        .back-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer}
+        
+        /* 隐藏元素 */
+        .hidden{display:none!important}
     </style>
 </head>
 <body>
     <!-- 登录页 -->
-    <div id="login-page" class="page">
-        <div class="login-container">
-            <h1>🏗️ CZ12标设备管理</h1>
-            <p>川藏铁路雅安至林芝段 CZSCZQ-12标</p>
-            <form id="login-form" class="login-form">
-                <div class="form-group">
-                    <label>管理密码</label>
-                    <input type="password" id="password" placeholder="请输入管理密码" required>
+    <div id="page-login" class="page active">
+        <div class="login-wrap">
+            <div class="login-box">
+                <h1>🏗️ CZ12标设备管理</h1>
+                <p>川藏铁路雅安至林芝段 CZSCZQ-12标</p>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>管理密码</label>
+                        <input type="password" id="pwd-input" placeholder="请输入管理密码" required>
+                    </div>
+                    <button type="submit" class="btn">登 录</button>
+                </form>
+                <div class="hint">
+                    <strong>💡 管理员密码</strong>
+                    密码: <strong>CZ12admin2026</strong><br>
+                    <a href="#" onclick="guestEnter();return false" style="color:#1565C0">→ 访客查看（无需登录）</a>
                 </div>
-                <button type="submit" class="btn-primary">登录</button>
-            </form>
-            <div class="admin-note">
-                💡 初始密码: <strong>CZ12admin2026</strong><br>
-                <a href="main.html">→ 访客查看（无需登录）</a>
             </div>
         </div>
     </div>
 
-    <!-- 主页：工点列表 -->
-    <div id="main-page" class="page">
-        <header class="header">
+    <!-- 访客页 -->
+    <div id="page-guest" class="page">
+        <div class="header">
             <h2>🏗️ CZ12标设备管理</h2>
-            <div class="header-actions">
-                <button id="btn-refresh" class="btn-icon" title="刷新">🔄</button>
-                <button id="btn-logout" class="btn-icon" title="退出">🚪</button>
-            </div>
-        </header>
-        <div class="user-info">🔐 管理员模式</div>
-        <div class="filter-bar">
+            <button class="header-btn" onclick="location.reload()" title="刷新">🔄</button>
+            <button class="header-btn" onclick="showPage('page-login')" title="登录">🔑</button>
+        </div>
+        <div class="user-bar" style="background:#fff8e1;color:#f57c00">
+            👁️ 访客模式（只读）
+        </div>
+        <div class="filter">
+            <select id="guest-filter-org" onchange="guestLoadWorksites()">
+                <option value="">全部单位</option>
+                <option value="局指">局指</option>
+                <option value="一分部">一分部</option>
+                <option value="二分部">二分部</option>
+            </select>
+            <input type="text" id="guest-search" placeholder="搜索工点..." oninput="guestLoadWorksites()">
+        </div>
+        <div class="content">
+            <div id="guest-ws-list"><div class="loading">加载中...</div></div>
+        </div>
+    </div>
+
+    <!-- 管理主页 -->
+    <div id="page-main" class="page">
+        <div class="header">
+            <h2>🏗️ CZ12标设备管理</h2>
+            <button class="header-btn" onclick="refreshWorksites()" title="刷新">🔄</button>
+            <button class="header-btn" onclick="logout()" title="退出">🚪</button>
+        </div>
+        <div class="user-bar">
+            <span>🔐 管理员模式</span>
+            <span class="badge">已登录</span>
+        </div>
+        <div class="filter">
             <select id="filter-org" onchange="loadWorksites()">
                 <option value="">全部单位</option>
                 <option value="局指">局指</option>
                 <option value="一分部">一分部</option>
                 <option value="二分部">二分部</option>
             </select>
-            <input type="text" id="filter-search" placeholder="🔍 搜索工点名称" oninput="loadWorksites()">
+            <input type="text" id="filter-search" placeholder="搜索工点..." oninput="loadWorksites()">
         </div>
         <div class="content">
-            <div id="worksite-list"></div>
+            <div id="ws-list"><div class="loading">加载中...</div></div>
         </div>
-        <button id="btn-add-worksite" class="fab" title="添加工点">➕</button>
+        <button class="fab" onclick="openAddWorksite()">➕</button>
     </div>
 
-    <!-- 工点详情：设备列表 -->
-    <div id="worksite-page" class="page">
-        <header class="header">
-            <button class="btn-icon" id="btn-home" title="返回">←</button>
-            <h2 id="worksite-title">工点详情</h2>
-            <div class="header-actions">
-                <button id="btn-refresh" class="btn-icon" title="刷新">🔄</button>
-            </div>
-        </header>
-        <div class="filter-bar">
-            <select id="filter-type" onchange="loadDevices(currentWsId,currentWsName)">
-                <option value="">全部分类</option>
+    <!-- 工点设备页 -->
+    <div id="page-worksite" class="page">
+        <div class="header">
+            <button class="back-btn" onclick="showPage('page-main')">←</button>
+            <h2 id="ws-title">工点详情</h2>
+            <button class="header-btn" onclick="refreshDevices()">🔄</button>
+        </div>
+        <div class="filter">
+            <select id="filter-type" onchange="loadDevices()">
+                <option value="">全部类别</option>
                 <option value="大中型设备">大中型设备</option>
                 <option value="特种设备">特种设备</option>
             </select>
-            <select id="filter-status" onchange="loadDevices(currentWsId,currentWsName)">
+            <select id="filter-status" onchange="loadDevices()">
                 <option value="">全部状态</option>
                 <option value="正常">正常</option>
                 <option value="维修中">维修中</option>
                 <option value="报废">报废</option>
             </select>
-            <input type="text" id="filter-dev-search" placeholder="🔍 搜索设备" oninput="loadDevices(currentWsId,currentWsName)">
+            <input type="text" id="filter-dev" placeholder="搜索设备..." oninput="loadDevices()">
         </div>
         <div class="content">
-            <div id="device-list"></div>
+            <div id="dev-list"><div class="loading">加载中...</div></div>
         </div>
-        <button id="btn-add-device" class="fab" title="添加设备">➕</button>
+        <button class="fab" onclick="openAddDevice()">➕</button>
     </div>
 
     <!-- 添加工点弹窗 -->
-    <div id="ws-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div id="modal-addws" class="modal hidden">
+        <div class="modal-box">
+            <div class="modal-head">
                 <h3 id="ws-modal-title">添加工点</h3>
-                <button class="modal-close" data-close="ws-modal">×</button>
+                <button class="modal-close" onclick="closeModal('modal-addws')">×</button>
             </div>
-            <form id="ws-form" class="modal-form">
-                <div class="form-group">
-                    <label>所属单位</label>
-                    <select id="ws-org">
-                        <option value="局指">局指</option>
-                        <option value="一分部">一分部</option>
-                        <option value="二分部">二分部</option>
-                    </select>
+            <form id="form-addws" onsubmit="submitWorksite(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>所属单位</label>
+                        <select id="ws-org">
+                            <option value="局指">局指</option>
+                            <option value="一分部">一分部</option>
+                            <option value="二分部">二分部</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>工点名称</label>
+                        <input type="text" id="ws-name" placeholder="如：一号拌合站" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>工点名称</label>
-                    <input type="text" id="ws-name" placeholder="如：一号拌合站" required>
+                <div class="modal-foot">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal('modal-addws')">取消</button>
+                    <button type="submit" class="btn">保存</button>
                 </div>
-                <button type="submit" class="btn-primary">保存</button>
             </form>
         </div>
     </div>
 
-    <!-- 添加/编辑设备弹窗 -->
-    <div id="dev-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
+    <!-- 添加设备弹窗 -->
+    <div id="modal-adddev" class="modal hidden">
+        <div class="modal-box">
+            <div class="modal-head">
                 <h3 id="dev-modal-title">添加设备</h3>
-                <button class="modal-close" data-close="dev-modal">×</button>
+                <button class="modal-close" onclick="closeModal('modal-adddev')">×</button>
             </div>
-            <form id="dev-form" class="modal-form">
-                <div class="form-group">
-                    <label>设备名称</label>
-                    <input type="text" id="dev-name" placeholder="如：混凝土搅拌站" required>
+            <form id="form-adddev" onsubmit="submitDevice(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>设备名称</label>
+                        <input type="text" id="dev-name" placeholder="如：混凝土搅拌站" required>
+                    </div>
+                    <div class="form-group">
+                        <label>设备类别</label>
+                        <select id="dev-type">
+                            <option value="大中型设备">大中型设备</option>
+                            <option value="特种设备">特种设备</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select id="dev-status">
+                            <option value="正常">正常</option>
+                            <option value="维修中">维修中</option>
+                            <option value="报废">报废</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <input type="text" id="dev-desc" placeholder="备注信息（选填）">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>设备类别</label>
-                    <select id="dev-type">
-                        <option value="大中型设备">大中型设备</option>
-                        <option value="特种设备">特种设备</option>
-                    </select>
+                <div class="modal-foot">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal('modal-adddev')">取消</button>
+                    <button type="submit" class="btn">保存</button>
                 </div>
-                <div class="form-group">
-                    <label>状态</label>
-                    <select id="dev-status">
-                        <option value="正常">正常</option>
-                        <option value="维修中">维修中</option>
-                        <option value="报废">报废</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>备注</label>
-                    <input type="text" id="dev-desc" placeholder="备注信息（选填）">
-                </div>
-                <button type="submit" class="btn-primary">保存</button>
             </form>
         </div>
     </div>
 
+    <!-- 确认删除弹窗 -->
+    <div id="modal-confirm" class="modal hidden">
+        <div class="confirm-box">
+            <p id="confirm-msg">确定要删除吗？</p>
+            <div class="btn-row">
+                <button class="btn btn-cancel" onclick="closeModal('modal-confirm')">取消</button>
+                <button class="btn btn-danger" id="confirm-ok-btn" onclick="doConfirm()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
     <div id="toast" class="toast hidden"></div>
 
-    <script src="js/main.js?v=20260413b"></script>
+    <script>
+    // ============ 配置 ============
+    var SB_URL = 'https://thvpdhayyyfgddzwffzv.supabase.co';
+    var SB_KEY = 'sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
+    var ADMIN_PWD = 'CZ12admin2026';
+    var ADMIN_UUID = '5e09b426-2ad5-4f79-8269-a3bd27c8abcf';
+
+    // ============ 状态 ============
+    var isAdmin = false;
+    var currentWsId = null;
+    var currentWsName = '';
+    var editingWsId = null;
+    var editingDevId = null;
+    var confirmCallback = null;
+
+    // ============ Supabase REST ============
+    async function sbReq(table, opts) {
+        opts = opts || {};
+        var method = opts.method || 'GET';
+        var body = opts.body;
+        var params = opts.params;
+        var url = SB_URL + '/rest/v1/' + table;
+        if (params) {
+            var q = Object.keys(params).map(function(k){ return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
+            url += '?' + q;
+        }
+        var headers = {
+            'Authorization': 'Bearer ' + SB_KEY,
+            'apikey': SB_KEY,
+            'Content-Type': 'application/json'
+        };
+        if (body) headers['Prefer'] = 'return=representation';
+        var res = await fetch(url, { method: method, headers: headers, body: body ? JSON.stringify(body) : undefined });
+        return res.json();
+    }
+
+    // ============ 页面导航 ============
+    function showPage(id) {
+        var pages = document.querySelectorAll('.page');
+        for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+        var el = document.getElementById(id);
+        if (el) el.classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    // ============ Toast ============
+    function toast(msg) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.remove('hidden');
+        setTimeout(function(){ t.classList.add('hidden'); }, 2000);
+    }
+
+    // ============ 弹窗 ============
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function confirmDlg(msg, callback) {
+        document.getElementById('confirm-msg').textContent = msg;
+        confirmCallback = callback;
+        openModal('modal-confirm');
+    }
+
+    function doConfirm() {
+        closeModal('modal-confirm');
+        if (confirmCallback) confirmCallback();
+    }
+
+    // ============ 工具 ============
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+    function fmt(s) { if (!s) return ''; var d = new Date(s); return (d.getMonth()+1) + '月' + d.getDate() + '日'; }
+
+    function orgClass(org) {
+        if (org === '局指') return 'org-juzhi';
+        if (org === '一分部') return 'org-yifenbu';
+        if (org === '二分部') return 'org-erfenbu';
+        return '';
+    }
+
+    function typeClass(t) {
+        if (t === '大中型设备') return 'type-large';
+        if (t === '特种设备') return 'type-special';
+        return '';
+    }
+
+    function statusDot(s) {
+        if (s === '正常') return 'status-normal';
+        if (s === '维修中') return 'status-repair';
+        if (s === '报废') return 'status-scrap';
+        return '';
+    }
+
+    // ============ 登录 ============
+    function checkLogin() {
+        isAdmin = localStorage.getItem('cz12_admin') === 'true';
+        if (isAdmin) {
+            showPage('page-main');
+            loadWorksites();
+        } else {
+            showPage('page-login');
+        }
+    }
+
+    document.getElementById('login-form').onsubmit = function(e) {
+        e.preventDefault();
+        var pwd = document.getElementById('pwd-input').value;
+        if (pwd === ADMIN_PWD) {
+            localStorage.setItem('cz12_admin', 'true');
+            isAdmin = true;
+            toast('登录成功');
+            showPage('page-main');
+            loadWorksites();
+        } else {
+            toast('密码错误');
+        }
+    };
+
+    function logout() {
+        localStorage.removeItem('cz12_admin');
+        isAdmin = false;
+        showPage('page-login');
+    }
+
+    function guestEnter() {
+        showPage('page-guest');
+        guestLoadWorksites();
+    }
+
+    // ============ 工点列表 ============
+    async function loadWorksites() {
+        var list = document.getElementById('ws-list');
+        list.innerHTML = '<div class="loading">加载中...</div>';
+        try {
+            var org = document.getElementById('filter-org').value;
+            var search = document.getElementById('filter-search').value.trim();
+            var data = await sbReq('worksites', { params: { select: '*,devices(count)', order: 'created_at.desc' } });
+            if (org) data = data.filter(function(w){ return w.org === org; });
+            if (search) data = data.filter(function(w){ return w.name.toLowerCase().indexOf(search.toLowerCase()) !== -1; });
+            
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="empty"><div class="empty-icon">🏗️</div><p>暂无工点<br><small style="color:#aaa">点击下方 + 按钮添加工点</small></p></div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < data.length; i++) {
+                var w = data[i];
+                var cnt = w.devices && w.devices[0] ? w.devices[0].count : 0;
+                html += '<div class="card" onclick="openWorksite(\'' + w.id + '\',\'' + esc(w.name) + '\')">' +
+                    '<div class="card-head">' +
+                    '<div class="card-title">' + esc(w.name) + ' <span class="org-badge ' + orgClass(w.org) + '">' + w.org + '</span></div>' +
+                    (isAdmin ? '<div class="card-actions"><button onclick="event.stopPropagation();editWs(\'' + w.id + '\',\'' + w.org + '\',\'' + esc(w.name) + '\')">✏️</button><button onclick="event.stopPropagation();delWs(\'' + w.id + '\',\'' + esc(w.name) + '\')">🗑️</button></div>' : '') +
+                    '</div><div class="card-meta">创建于 ' + fmt(w.created_at) + '</div>' +
+                    '<div class="card-foot">📋 ' + cnt + ' 台设备</div></div>';
+            }
+            list.innerHTML = html;
+        } catch (err) {
+            list.innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>加载失败<br><small style="color:#c00">' + err.message + '</small></p></div>';
+        }
+    }
+
+    function refreshWorksites() { loadWorksites(); }
+
+    // ============ 工点详情 ============
+    function openWorksite(id, name) {
+        currentWsId = id;
+        currentWsName = name;
+        document.getElementById('ws-title').textContent = name;
+        showPage('page-worksite');
+        loadDevices();
+    }
+
+    async function loadDevices() {
+        var list = document.getElementById('dev-list');
+        list.innerHTML = '<div class="loading">加载中...</div>';
+        try {
+            var type = document.getElementById('filter-type').value;
+            var status = document.getElementById('filter-status').value;
+            var search = document.getElementById('filter-dev').value.trim();
+            var data = await sbReq('devices', { params: { select: '*,photos(count)', eq_worksite_id: currentWsId, order: 'created_at.desc' } });
+            if (type) data = data.filter(function(d){ return d.device_type === type; });
+            if (status) data = data.filter(function(d){ return d.status === status; });
+            if (search) data = data.filter(function(d){ return d.name.toLowerCase().indexOf(search.toLowerCase()) !== -1; });
+            
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="empty"><div class="empty-icon">🔧</div><p>暂无设备<br><small style="color:#aaa">点击下方 + 按钮添加设备</small></p></div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+                var cnt = d.photos && d.photos[0] ? d.photos[0].count : 0;
+                var desc = d.description ? ' · ' + esc(d.description.substring(0, 30)) : '';
+                html += '<div class="card">' +
+                    '<div class="card-head">' +
+                    '<div class="card-title">' + esc(d.name) + ' <span class="type-badge ' + typeClass(d.device_type) + '">' + d.device_type + '</span></div>' +
+                    (isAdmin ? '<div class="card-actions"><button onclick="editDev(\'' + d.id + '\')">✏️</button><button onclick="delDev(\'' + d.id + '\',\'' + esc(d.name) + '\')">🗑️</button></div>' : '') +
+                    '</div>' +
+                    '<div class="card-meta"><span class="status-dot ' + statusDot(d.status) + '"></span>' + d.status + desc + '</div>' +
+                    '<div class="card-foot">📷 ' + cnt + '张 · ' + fmt(d.created_at) + '</div></div>';
+            }
+            list.innerHTML = html;
+        } catch (err) {
+            list.innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>加载失败<br><small style="color:#c00">' + err.message + '</small></p></div>';
+        }
+    }
+
+    function refreshDevices() { loadDevices(); }
+
+    // ============ 添加工点 ============
+    function openAddWorksite() {
+        editingWsId = null;
+        document.getElementById('ws-modal-title').textContent = '添加工点';
+        document.getElementById('ws-org').value = '局指';
+        document.getElementById('ws-name').value = '';
+        openModal('modal-addws');
+    }
+
+    function editWs(id, org, name) {
+        editingWsId = id;
+        document.getElementById('ws-modal-title').textContent = '编辑工点';
+        document.getElementById('ws-org').value = org;
+        document.getElementById('ws-name').value = name;
+        openModal('modal-addws');
+    }
+
+    async function submitWorksite(e) {
+        e.preventDefault();
+        var org = document.getElementById('ws-org').value;
+        var name = document.getElementById('ws-name').value.trim();
+        if (!name) { toast('请输入名称'); return; }
+        try {
+            if (editingWsId) {
+                await sbReq('worksites?id=eq.' + editingWsId, { method: 'PATCH', body: { org: org, name: name } });
+                toast('更新成功');
+            } else {
+                await sbReq('worksites', { method: 'POST', body: { org: org, name: name, created_by: ADMIN_UUID } });
+                toast('添加成功');
+            }
+            closeModal('modal-addws');
+            loadWorksites();
+        } catch (err) {
+            toast('保存失败: ' + err.message);
+        }
+    }
+
+    async function delWs(id, name) {
+        confirmDlg('确定删除工点「' + name + '」？\n删除后无法恢复！', async function() {
+            try {
+                await sbReq('worksites?id=eq.' + id, { method: 'DELETE' });
+                toast('已删除');
+                loadWorksites();
+            } catch (err) {
+                toast('删除失败');
+            }
+        });
+    }
+
+    // ============ 添加/编辑设备 ============
+    function openAddDevice() {
+        editingDevId = null;
+        document.getElementById('dev-modal-title').textContent = '添加设备';
+        document.getElementById('dev-name').value = '';
+        document.getElementById('dev-type').value = '大中型设备';
+        document.getElementById('dev-status').value = '正常';
+        document.getElementById('dev-desc').value = '';
+        openModal('modal-adddev');
+    }
+
+    async function editDev(id) {
+        try {
+            var data = await sbReq('devices', { params: { id: 'eq.' + id, select: '*' } });
+            if (data && data[0]) {
+                editingDevId = id;
+                document.getElementById('dev-modal-title').textContent = '编辑设备';
+                document.getElementById('dev-name').value = data[0].name;
+                document.getElementById('dev-type').value = data[0].device_type;
+                document.getElementById('dev-status').value = data[0].status;
+                document.getElementById('dev-desc').value = data[0].description || '';
+                openModal('modal-adddev');
+            }
+        } catch (err) {
+            toast('加载失败');
+        }
+    }
+
+    async function submitDevice(e) {
+        e.preventDefault();
+        var name = document.getElementById('dev-name').value.trim();
+        var device_type = document.getElementById('dev-type').value;
+        var status = document.getElementById('dev-status').value;
+        var description = document.getElementById('dev-desc').value.trim();
+        if (!name) { toast('请输入名称'); return; }
+        try {
+            if (editingDevId) {
+                await sbReq('devices?id=eq.' + editingDevId, { method: 'PATCH', body: { name: name, device_type: device_type, status: status, description: description } });
+                toast('更新成功');
+            } else {
+                await sbReq('devices', { method: 'POST', body: { worksite_id: currentWsId, name: name, device_type: device_type, status: status, description: description, created_by: ADMIN_UUID } });
+                toast('添加成功');
+            }
+            closeModal('modal-adddev');
+            loadDevices();
+        } catch (err) {
+            toast('保存失败: ' + err.message);
+        }
+    }
+
+    async function delDev(id, name) {
+        confirmDlg('确定删除设备「' + name + '」？', async function() {
+            try {
+                await sbReq('devices?id=eq.' + id, { method: 'DELETE' });
+                toast('已删除');
+                loadDevices();
+            } catch (err) {
+                toast('删除失败');
+            }
+        });
+    }
+
+    // ============ 访客模式 ============
+    async function guestLoadWorksites() {
+        var list = document.getElementById('guest-ws-list');
+        list.innerHTML = '<div class="loading">加载中...</div>';
+        try {
+            var org = document.getElementById('guest-filter-org').value;
+            var search = document.getElementById('guest-search').value.trim();
+            var data = await sbReq('worksites', { params: { select: '*,devices(count)', order: 'created_at.desc' } });
+            if (org) data = data.filter(function(w){ return w.org === org; });
+            if (search) data = data.filter(function(w){ return w.name.toLowerCase().indexOf(search.toLowerCase()) !== -1; });
+            
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="empty"><div class="empty-icon">🏗️</div><p>暂无工点数据</p></div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < data.length; i++) {
+                var w = data[i];
+                var cnt = w.devices && w.devices[0] ? w.devices[0].count : 0;
+                html += '<div class="card" onclick="guestOpenWs(\'' + w.id + '\',\'' + esc(w.name) + '\')">' +
+                    '<div class="card-head">' +
+                    '<div class="card-title">' + esc(w.name) + ' <span class="org-badge ' + orgClass(w.org) + '">' + w.org + '</span></div>' +
+                    '</div><div class="card-meta">创建于 ' + fmt(w.created_at) + '</div>' +
+                    '<div class="card-foot">📋 ' + cnt + ' 台设备</div></div>';
+            }
+            list.innerHTML = html;
+        } catch (err) {
+            list.innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>加载失败<br><small style="color:#c00">' + err.message + '</small></p></div>';
+        }
+    }
+
+    function guestOpenWs(id, name) {
+        currentWsId = id;
+        currentWsName = name;
+        document.getElementById('ws-title').textContent = name;
+        showPage('page-worksite');
+        loadDevices();
+    }
+
+    // ============ 初始化 ============
+    document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
 </body>
 </html>
