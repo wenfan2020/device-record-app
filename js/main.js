@@ -1,372 +1,472 @@
-/**
- * CZ12标设备管理 - 极简稳定版
- * 认证方式：简单密码（无注册系统）
- */
+(function(){
+'use strict';
 
-const SUPABASE_URL = 'https://thvpdhayyyfgddzwffzv.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
+var SB_URL='https://thvpdhayyyfgddzwffzv.supabase.co';
+var SB_KEY='sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
+var ADMIN_PWD='CZ12admin2026';
 
-// 管理密码（首次设置后保存在数据库）
-const ADMIN_PASSWORD = 'CZ12admin2026';
+var S={user:null,isAdmin:false,isApproved:false,currentWs:null,currentDev:null,cfCb:null,phDevId:null,phList:null};
 
-// 管理员的 UUID（固定值，对应 18006855@qq.com）
-const ADMIN_UUID = '5e09b426-2ad5-4f79-8269-a3bd27c8abcf';
+function req(tbl,opt){
+  opt=opt||{};var m=opt.method||'GET',body=opt.body,params=opt.params||{};
+  var url=SB_URL+'/rest/v1/'+tbl;
+  var q=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+  if(q)url+='?'+q;
+  var h={'Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY,'Content-Type':'application/json'};
+  if(body)h['Prefer']='return=representation';
+  return fetch(url,{method:m,headers:h,body:body?JSON.stringify(body):undefined}).then(function(r){return r.json();}).then(function(d){
+    if(d&&typeof d==='object'&&!Array.isArray(d)&&d.items)return d.items;
+    if(Array.isArray(d))return d;
+    if(d&&typeof d==='object')return[d];
+    return[];
+  });
+}
 
-// 当前状态
-let isAdmin = false;
-let currentUser = { email: 'admin' };
+function reqOne(tbl,params){
+  params=params||{};params['limit']=1;
+  return req(tbl,{params:params}).then(function(d){return d&&d[0]||null;});
+}
 
-// ============ Supabase REST API 调用 ============
-async function supabaseRequest(table, options = {}) {
-    const { method = 'GET', body, params } = options;
-    let url = `${SUPABASE_URL}/rest/v1/${table}`;
-    
-    if (params) {
-        const query = new URLSearchParams(params).toString();
-        url += `?${query}`;
+function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function fmt(s){if(!s)return'';var d=new Date(s);return(d.getMonth()+1)+'月'+d.getDate()+'日';}
+function fmtD(s){if(!s)return'';var d=new Date(s);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function days(s){if(!s)return null;return Math.ceil((new Date(s)-new Date())/(1000*60*60*24));}
+function dot(s){return s==='正常'?'dg':s==='维修中'?'do':s==='停用'?'db':'dr';}
+function ob(s){return s==='局指'?'oj':s==='一分部'?'oy':'oe';}
+function ot(s){return s==='大中型设备'?'ot':'os';}
+
+var tt;
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.remove('hidden');
+  clearTimeout(tt);tt=setTimeout(function(){t.classList.add('hidden');},2500);
+}
+
+function modal(id,show){var e=document.getElementById(id);if(show)e.classList.remove('hidden');else e.classList.add('hidden');}
+
+function showLoginForm(){
+  document.getElementById('login-area').classList.remove('hidden');
+  document.getElementById('reg-area').classList.add('hidden');
+  document.getElementById('pending-area').classList.add('hidden');
+}
+function showReg(){
+  document.getElementById('login-area').classList.add('hidden');
+  document.getElementById('reg-area').classList.remove('hidden');
+  document.getElementById('pending-area').classList.add('hidden');
+}
+
+function handleLogin(e){
+  e.preventDefault();
+  var email=document.getElementById('li-email').value.trim();
+  var pwd=document.getElementById('li-pwd').value;
+  if(pwd===ADMIN_PWD){
+    S.isAdmin=true;S.isApproved=true;
+    S.user={email:email,name:'管理员'};
+    localStorage.setItem('cz12_admin','true');
+    localStorage.setItem('cz12_user',JSON.stringify(S.user));
+    toast('登录成功');
+    goHome();return;
+  }
+  toast('密码错误');
+}
+
+function handleReg(e){
+  e.preventDefault();
+  toast('注册功能暂停，请联系管理员');
+}
+
+function doLogout(){
+  localStorage.removeItem('cz12_admin');
+  localStorage.removeItem('cz12_user');
+  location.reload();
+}
+
+function checkLogin(){
+  if(localStorage.getItem('cz12_admin')==='true'){
+    S.isAdmin=true;S.isApproved=true;
+    var u=localStorage.getItem('cz12_user');
+    S.user=u?JSON.parse(u):{email:'admin',name:'管理员'};
+    goHome();return;
+  }
+  showPage('login');showLoginForm();
+}
+
+function goHome(){
+  showPage('home');loadStats();loadWsListForHome();updateUserDisplay();
+}
+
+function updateUserDisplay(){
+  document.getElementById('u-name').textContent=S.isAdmin?'管理员':'用户';
+  document.getElementById('u-badge').textContent=S.isAdmin?'管理员':'已登录';
+  document.getElementById('fab-ws').style.display=S.isAdmin?'':'none';
+}
+
+async function loadStats(){
+  var area=document.getElementById('stats-area');
+  area.innerHTML='<div class="loading">加载中...</div>';
+  try{
+    var wss=await req('worksites',{params:{select:'*'}});
+    var devs=await req('devices',{params:{select:'*'}});
+    var totalWs=wss.length;
+    var totalDev=devs.length;
+    var normal=devs.filter(function(d){return d.status==='正常';}).length;
+    var repair=devs.filter(function(d){return d.status==='维修中';}).length;
+    var scrap=devs.filter(function(d){return d.status==='报废'||d.status==='停用';}).length;
+    var warn=0,overdue=0;
+    for(var i=0;i<devs.length;i++){
+      var d=devs[i];
+      if(d.next_inspection_date){
+        var du=days(d.next_inspection_date);
+        if(du!==null&&du<0)overdue++;
+        else if(du!==null&&du<=30)warn++;
+      }
     }
-    
-    const headers = {
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'apikey': SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json'
-    };
-    
-    if (body) {
-        headers['Prefer'] = 'return=representation';
+    var html='<div class="stats-row">'+
+      '<div class="stat-card"><div class="stat-num">'+totalWs+'</div><div class="stat-label">工点数</div></div>'+
+      '<div class="stat-card"><div class="stat-num">'+totalDev+'</div><div class="stat-label">设备总数</div></div>'+
+      '</div><div class="stats-row">'+
+      '<div class="stat-card"><div class="stat-num cg">'+normal+'</div><div class="stat-label">正常</div></div>'+
+      '<div class="stat-card"><div class="stat-num" style="color:#ff9800">'+repair+'</div><div class="stat-label">维修中</div></div>'+
+      '<div class="stat-card"><div class="stat-num" style="color:#f44336">'+scrap+'</div><div class="stat-label">停用/报废</div></div>'+
+      '</div>';
+    if(warn>0||overdue>0){
+      html+='<div class="stats-row">';
+      if(warn>0)html+='<div class="stat-card"><div class="stat-num" style="color:#e65100">'+warn+'</div><div class="stat-label">30天内到期</div></div>';
+      if(overdue>0)html+='<div class="stat-card"><div class="stat-num" style="color:#c62828">'+overdue+'</div><div class="stat-label">已到期</div></div>';
+      html+='</div>';
     }
-    
-    const res = await fetch(url, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined
-    });
-    
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || '请求失败');
-    return data;
+    area.innerHTML=html;
+  }catch(e){area.innerHTML='<div class="empty"><div class="empty-icon">X</div><p>加载失败</p></div>';}
 }
 
-// ============ 认证 ============
-function checkAdminStatus() {
-    isAdmin = localStorage.getItem('cz12_admin') === 'true';
-    return isAdmin;
-}
-
-function doLogin(password) {
-    if (password === ADMIN_PASSWORD) {
-        localStorage.setItem('cz12_admin', 'true');
-        isAdmin = true;
-        return true;
+async function loadWsListForHome(){
+  var list=document.getElementById('ws-list');
+  list.innerHTML='<div class="loading">加载中...</div>';
+  try{
+    var wss=await req('worksites',{params:{select:'*,devices(count)',order:'created_at.desc'}});
+    if(!wss||wss.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">-</div><p>暂无工点</p></div>';return;}
+    var html='';
+    for(var i=0;i<wss.length;i++){
+      var w=wss[i];
+      var cnt=w.devices&&w.devices[0]?w.devices[0].count:0;
+      html+='<div class="card" onclick="openWs(&quot;'+w.id+'&quot;,&quot;'+esc(w.name)+'&quot;)">'+
+        '<div class="card-head"><div class="card-title">'+esc(w.name)+' <span class="ob '+ob(w.org)+'">'+w.org+'</span></div>'+
+        (S.isAdmin?'<div class="card-actions"><button onclick="event.stopPropagation();editWs(&quot;'+w.id+'&quot;,&quot;'+w.org+'&quot;,&quot;'+esc(w.name)+'&quot;)">E</button><button onclick="event.stopPropagation();delWs(&quot;'+w.id+'&quot;,&quot;'+esc(w.name)+'&quot;)">D</button></div>':'')+
+        '</div><div class="card-meta">'+(w.location||'')+'</div><div class="card-foot">设备:'+cnt+'台</div></div>';
     }
-    return false;
+    list.innerHTML=html;
+  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">X</div><p>加载失败</p></div>';}
 }
 
-function doLogout() {
-    localStorage.removeItem('cz12_admin');
-    isAdmin = false;
+function openWs(id,name){
+  S.currentWs={id:id,name:name};
+  document.getElementById('ws-title2').textContent=name;
+  showPage('ws');loadWsDevs();
 }
 
-// ============ 页面导航 ============
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-    document.getElementById(pageId)?.classList.remove('hidden');
+function refreshAll(){goHome();}
+
+function showAddWs(){
+  S.currentWs=null;
+  document.getElementById('m-ws-title').textContent='添加工点';
+  document.getElementById('wsf-id').value='';
+  document.getElementById('wsf-org').value='局指';
+  document.getElementById('wsf-name').value='';
+  document.getElementById('wsf-loc').value='';
+  document.getElementById('wsf-note').value='';
+  modal('m-ws',true);
+}
+window.showAddWs=showAddWs;
+
+function editWs(id,org,name){
+  document.getElementById('m-ws-title').textContent='编辑工点';
+  document.getElementById('wsf-id').value=id;
+  document.getElementById('wsf-org').value=org;
+  document.getElementById('wsf-name').value=name;
+  modal('m-ws',true);
+}
+window.editWs=editWs;
+
+async function saveWs(e){
+  e.preventDefault();
+  var id=document.getElementById('wsf-id').value;
+  var org=document.getElementById('wsf-org').value;
+  var name=document.getElementById('wsf-name').value.trim();
+  var loc=document.getElementById('wsf-loc').value.trim();
+  var note=document.getElementById('wsf-note').value.trim();
+  if(!name){toast('请输入名称');return;}
+  try{
+    if(id){
+      await req('worksites?id=eq.'+id,{method:'PATCH',body:{org:org,name:name,location:loc,note:note}});
+      toast('更新成功');
+    }else{
+      await req('worksites',{method:'POST',body:{org:org,name:name,location:loc,note:note,created_by:'00000000-0000-0000-0000-000000000000'}});
+      toast('添加成功');
+    }
+    modal('m-ws',false);
+    loadWsListForHome();
+  }catch(e){toast('保存失败: '+e.message);}
+}
+window.saveWs=saveWs;
+
+function delWs(id,name){
+  confirm('删除工点「'+name+'」？',async function(){
+    try{await req('worksites?id=eq.'+id,{method:'DELETE'});toast('已删除');loadWsListForHome();}catch(e){toast('删除失败');}
+  });
+}
+window.delWs=delWs;
+
+async function loadWsDevs(){
+  var list=document.getElementById('ws-dev-list');
+  list.innerHTML='<div class="loading">加载中...</div>';
+  if(!S.currentWs)return;
+  try{
+    var typeF=document.getElementById('f-dev-type').value;
+    var statusF=document.getElementById('f-dev-status').value;
+    var searchF=document.getElementById('f-dev-search').value.trim().toLowerCase();
+    var devs=await req('devices',{params:{select:'*,photos(count)',eq_worksite_id:S.currentWs.id,order:'created_at.desc'}});
+    if(typeF)devs=devs.filter(function(d){return d.device_type===typeF;});
+    if(statusF)devs=devs.filter(function(d){return d.status===statusF;});
+    if(searchF)devs=devs.filter(function(d){return(d.name+(d.model||'')+(d.serial_number||'')).toLowerCase().indexOf(searchF)!==-1;});
+    if(!devs||devs.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">-</div><p>'+(typeF||statusF||searchF?'无筛选结果':'暂无设备')+'</p></div>';return;}
+    var html='';
+    for(var i=0;i<devs.length;i++){
+      var d=devs[i];
+      var cnt=d.photos&&d.photos[0]?d.photos[0].count:0;
+      var warn='';
+      if(d.next_inspection_date){
+        var du=days(d.next_inspection_date);
+        if(du!==null&&du<0)warn='error-card';
+        else if(du!==null&&du<=30)warn='warn-card';
+      }
+      html+='<div class="card '+warn+'" onclick="openDev(''+d.id+'')">'+
+        '<div class="card-head"><div class="card-title">'+esc(d.name)+' <span class="ot '+ot(d.device_type)+'">'+d.device_type+'</span></div>'+
+        (S.isAdmin?'<div class="card-actions"><button onclick="event.stopPropagation();editDevById(''+d.id+'')">E</button><button onclick="event.stopPropagation();delDevById(''+d.id+'',''+esc(d.name)+'')">D</button></div>':'')+
+        '</div><div class="card-meta"><span class="dot '+dot(d.status)+'"></span>'+d.status+(d.model?' · '+esc(d.model):'')+'</div>'+
+        '<div class="card-foot">照片:'+cnt+'张 · '+fmt(d.created_at)+'</div></div>';
+    }
+    list.innerHTML=html;
+  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">X</div><p>加载失败</p></div>';}
 }
 
-// ============ 加载工点列表 ============
-async function loadWorksites() {
-    const list = document.getElementById('worksite-list');
-    list.innerHTML = '<div class="loading">加载中...</div>';
-    
-    try {
-        const data = await supabaseRequest('worksites', {
-            params: { select: '*,devices(count)', order: 'created_at.desc' }
-        });
-        
-        if (!data || data.length === 0) {
-            list.innerHTML = '<div class="empty-state"><div class="icon">🏗️</div><p>暂无工点</p></div>';
-            return;
+function refreshWsDevs(){loadWsDevs();}
+
+async function showAddDev(){
+  document.getElementById('m-dev-title').textContent='添加设备';
+  document.getElementById('df-id').value='';
+  var wsSel=document.getElementById('df-ws');
+  var wss=await req('worksites',{params:{select:'id,name',order:'name.asc'}});
+  wsSel.innerHTML=wss.map(function(w){return '<option value="'+w.id+'">'+esc(w.name)+'</option>';}).join('');
+  if(S.currentWs)wsSel.value=S.currentWs.id;
+  document.getElementById('df-name').value='';
+  document.getElementById('df-type').value='大中型设备';
+  document.getElementById('df-status').value='正常';
+  document.getElementById('df-model').value='';
+  document.getElementById('df-serial').value='';
+  document.getElementById('df-mfr').value='';
+  document.getElementById('df-mfg').value='';
+  document.getElementById('df-pur').value='';
+  document.getElementById('df-desc').value='';
+  modal('m-dev',true);
+}
+window.showAddDev=showAddDev;
+
+async function editDevById(id){
+  var devs=await req('devices',{params:{id:'eq.'+id,select:'*',limit:1}});
+  if(!devs||!devs[0]){toast('加载失败');return;}
+  var d=devs[0];
+  document.getElementById('m-dev-title').textContent='编辑设备';
+  document.getElementById('df-id').value=id;
+  var wsSel=document.getElementById('df-ws');
+  var wss=await req('worksites',{params:{select:'id,name',order:'name.asc'}});
+  wsSel.innerHTML=wss.map(function(w){return '<option value="'+w.id+'">'+esc(w.name)+'</option>';}).join('');
+  wsSel.value=d.worksite_id;
+  document.getElementById('df-name').value=d.name||'';
+  document.getElementById('df-type').value=d.device_type||'大中型设备';
+  document.getElementById('df-status').value=d.status||'正常';
+  document.getElementById('df-model').value=d.model||'';
+  document.getElementById('df-serial').value=d.serial_number||'';
+  document.getElementById('df-mfr').value=d.manufacturer||'';
+  document.getElementById('df-mfg').value=d.mfg_date||'';
+  document.getElementById('df-pur').value=d.purchase_date||'';
+  document.getElementById('df-desc').value=d.description||'';
+  modal('m-dev',true);
+}
+window.editDevById=editDevById;
+
+async function saveDev(e){
+  e.preventDefault();
+  var id=document.getElementById('df-id').value;
+  var worksite_id=document.getElementById('df-ws').value;
+  var name=document.getElementById('df-name').value.trim();
+  var device_type=document.getElementById('df-type').value;
+  var status=document.getElementById('df-status').value;
+  var model=document.getElementById('df-model').value.trim();
+  var serial_number=document.getElementById('df-serial').value.trim();
+  var manufacturer=document.getElementById('df-mfr').value.trim();
+  var mfg_date=document.getElementById('df-mfg').value;
+  var purchase_date=document.getElementById('df-pur').value;
+  var description=document.getElementById('df-desc').value.trim();
+  if(!name){toast('请输入名称');return;}
+  var body={worksite_id:worksite_id,name:name,device_type:device_type,status:status,model:model,serial_number:serial_number,manufacturer:manufacturer,description:description};
+  if(mfg_date)body.mfg_date=mfg_date;
+  if(purchase_date)body.purchase_date=purchase_date;
+  try{
+    if(id){
+      await req('devices?id=eq.'+id,{method:'PATCH',body:body});
+      toast('更新成功');
+    }else{
+      body.created_by='00000000-0000-0000-0000-000000000000';
+      await req('devices',{method:'POST',body:body});
+      toast('添加成功');
+    }
+    modal('m-dev',false);
+    loadWsDevs();
+  }catch(e){toast('保存失败: '+e.message);}
+}
+window.saveDev=saveDev;
+
+function delDevById(id,name){
+  confirm('删除设备「'+name+'」？',async function(){
+    try{await req('devices?id=eq.'+id,{method:'DELETE'});toast('已删除');loadWsDevs();}catch(e){toast('删除失败');}
+  });
+}
+window.delDevById=delDevById;
+
+async function openDev(id){
+  S.currentDev={id:id};
+  document.getElementById('dev-back').onclick=function(){showPage('ws');};
+  var devs=await req('devices',{params:{id:'eq.'+id,select:'*',limit:1}});
+  if(!devs||!devs[0]){document.getElementById('dev-detail').innerHTML='<div class="empty"><div class="empty-icon">X</div><p>加载失败</p></div>';return;}
+  var d=devs[0];
+  document.getElementById('dev-title2').textContent=d.name;
+  var photos=await req('photos',{params:{eq_device_id:id,select:'*',order:'created_at.desc'}});
+  var phHtml='';
+  if(photos&&photos.length>0){
+    phHtml='<div class="sec-title">照片 ('+photos.length+')</div><div class="pgrid">';
+    for(var i=0;i<photos.length;i++){
+      phHtml+='<div class="pitem"><img src="'+esc(photos[i].url)+'" onclick="window.open(''+esc(photos[i].url)+'')">'+(S.isAdmin?'<button class="pdel" onclick="delPhoto(''+photos[i].id+'')">x</button>':'')+'</div>';
+    }
+    phHtml+='</div>';
+  }
+  var html='<div class="card"><div class="card-title">'+esc(d.name)+' <span class="ot '+ot(d.device_type)+'">'+d.device_type+'</span></div>'+
+    '<div class="card-meta"><span class="dot '+dot(d.status)+'"></span>'+d.status+'</div>'+
+    (d.model?'<div class="card-meta">型号: '+esc(d.model)+'</div>':'')+
+    (d.serial_number?'<div class="card-meta">编号: '+esc(d.serial_number)+'</div>':'')+
+    (d.manufacturer?'<div class="card-meta">厂家: '+esc(d.manufacturer)+'</div>':'')+
+    (d.description?'<div class="card-desc">'+esc(d.description)+'</div>':'')+
+    '</div>'+
+    '<div class="mt8"><button class="btn btn-sm" onclick="openPhotoModal(''+id+'',''+esc(d.name)+'')">照片管理</button></div>'+
+    phHtml;
+  document.getElementById('dev-detail').innerHTML=html;
+  showPage('dev');
+}
+window.openDev=openDev;
+
+async function openPhotoModal(devId,devName){
+  S.phDevId=devId;
+  document.getElementById('ph-dev-name').textContent=devName;
+  var grid=document.getElementById('ph-grid');
+  try{
+    var photos=await req('photos',{params:{eq_device_id:devId,select:'*',order:'created_at.desc'}});
+    S.phList=photos||[];
+    if(S.phList.length===0){grid.innerHTML='<div class="empty" style="padding:20px">暂无照片</div>';}
+    else{
+      grid.innerHTML=S.phList.map(function(p){
+        return '<div class="pitem"><img src="'+esc(p.url)+'" onclick="window.open(''+esc(p.url)+'')">'+(S.isAdmin?'<button class="pdel" onclick="delPhoto(''+p.id+'')">x</button>':'')+'</div>';
+      }).join('');
+    }
+  }catch(e){grid.innerHTML='<div class="empty" style="padding:20px">加载失败</div>';}
+  modal('m-photo',true);
+}
+window.openPhotoModal=openPhotoModal;
+
+function doPhotoUpload(){document.getElementById('ph-input').click();}
+
+function handlePhUpload(e){
+  var files=e.target.files;
+  if(!files||files.length===0)return;
+  var devId=S.phDevId;
+  var grid=document.getElementById('ph-grid');
+  grid.innerHTML='<div class="loading">上传中...</div>';
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var dataUrl=ev.target.result;
+    req('photos',{method:'POST',body:{device_id:devId,url:dataUrl,created_by:'00000000-0000-0000-0000-000000000000'}}).then(function(){
+      toast('上传成功');
+      openPhotoModal(devId,document.getElementById('ph-dev-name').textContent);
+    }).catch(function(e){toast('上传失败');});
+  };
+  reader.readAsDataURL(files[0]);
+}
+window.handlePhUpload=handlePhUpload;
+
+function delPhoto(id){
+  confirm('删除照片？',async function(){
+    try{await req('photos?id=eq.'+id,{method:'DELETE'});toast('已删除');openPhotoModal(S.phDevId,document.getElementById('ph-dev-name').textContent);}catch(e){toast('删除失败');}
+  });
+}
+window.delPhoto=delPhoto;
+
+function editDev(){if(S.currentDev)editDevById(S.currentDev.id);}
+
+async function doExport(){
+  try{
+    var wss=await req('worksites',{params:{select:'*',order:'org.asc,name.asc'}});
+    var html='<table border="1" style="border-collapse:collapse;font-size:11px">';
+    html+='<tr style="background:#1565C0;color:#fff"><th>序号</th><th>单位</th><th>工点</th><th>设备名称</th><th>类别</th><th>状态</th><th>型号</th><th>编号</th><th>厂家</th><th>描述</th></tr>';
+    var row=1;
+    for(var i=0;i<wss.length;i++){
+      var ws=wss[i];
+      var devs=await req('devices',{params:{eq_worksite_id:ws.id,select:'*',order:'name.asc'}});
+      if(!devs||devs.length===0){
+        html+='<tr><td>'+row+++'</td><td>'+esc(ws.org)+'</td><td>'+esc(ws.name)+'</td><td colspan="7" style="color:#999">无设备</td></tr>';
+      }else{
+        for(var j=0;j<devs.length;j++){
+          var d=devs[j];
+          html+='<tr><td>'+row+++'</td><td>'+esc(ws.org)+'</td><td>'+esc(ws.name)+'</td><td>'+esc(d.name)+'</td><td>'+esc(d.device_type)+'</td><td>'+esc(d.status)+'</td><td>'+esc(d.model||'')+'</td><td>'+esc(d.serial_number||'')+'</td><td>'+esc(d.manufacturer||'')+'</td><td>'+esc(d.description||'')+'</td></tr>';
         }
-        
-        list.innerHTML = data.map(ws => {
-            const count = ws.devices?.[0]?.count || 0;
-            const orgClass = ws.org === '局指' ? 'juzhi' : ws.org === '一分部' ? 'yifenbu' : 'erfenbu';
-            return `
-                <div class="card" onclick="goToWorksite('${ws.id}')">
-                    <div class="card-header">
-                        <div class="card-title">${escapeHtml(ws.name)} <span class="org-badge ${orgClass}">${ws.org}</span></div>
-                        ${isAdmin ? `<div class="card-actions"><button onclick="event.stopPropagation();editWorksite('${ws.id}','${ws.org}','${escapeHtml(ws.name)}')">✏️</button><button onclick="event.stopPropagation();delWorksite('${ws.id}','${escapeHtml(ws.name)}')">🗑️</button></div>` : ''}
-                    </div>
-                    <div class="card-meta">创建于 ${formatDate(ws.created_at)}</div>
-                    <div class="card-stats">📋 ${count} 台设备</div>
-                </div>`;
-        }).join('');
-        
-        // 隐藏/显示添加按钮
-        document.getElementById('btn-add-worksite').style.display = isAdmin ? '' : 'none';
-        
-    } catch (err) {
-        list.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败: ${err.message}</p></div>`;
+      }
     }
+    html+='</table>';
+    var blob=new Blob([html],{type:'application/vnd.ms-excel'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='CZ12设备清单_'+new Date().toISOString().slice(0,10)+'.xls';
+    a.click();
+    toast('导出成功');
+  }catch(e){toast('导出失败');}
+}
+window.doExport=doExport;
+
+function showUser(){
+  document.getElementById('uinfo').innerHTML='<strong>管理员账户</strong><br><span class="cg">'+S.user.email+'</span>';
+  modal('m-user',true);
+}
+window.showUser=showUser;
+
+function confirm(msg,cb){
+  document.getElementById('cf-msg').textContent=msg;
+  S.cfCb=cb;
+  modal('m-confirm',true);
+}
+window.confirm=confirm;
+
+function doCf(){
+  modal('m-confirm',false);
+  if(S.cfCb)S.cfCb();
+}
+window.doCf=doCf;
+
+function showPage(id){
+  var pages=document.querySelectorAll('.page');
+  for(var i=0;i<pages.length;i++)pages[i].classList.remove('active');
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,0);
 }
 
-// ============ 加载设备列表 ============
-async function loadDevices(worksiteId, worksiteName) {
-    const list = document.getElementById('device-list');
-    document.getElementById('worksite-title').textContent = worksiteName;
-    list.innerHTML = '<div class="loading">加载中...</div>';
-    
-    try {
-        const data = await supabaseRequest('devices', {
-            params: { 
-                select: '*,photos(count)', 
-                eq_worksite_id: worksiteId,
-                order: 'created_at.desc'
-            }
-        });
-        
-        if (!data || data.length === 0) {
-            list.innerHTML = '<div class="empty-state"><div class="icon">🔧</div><p>暂无设备</p></div>';
-            return;
-        }
-        
-        const statusEmoji = { '正常': '🟢', '维修中': '🟠', '报废': '🔴' };
-        const typeClass = { '大中型设备': 'large', '特种设备': 'special' };
-        
-        list.innerHTML = data.map(d => {
-            const photoCount = d.photos?.[0]?.count || 0;
-            return `
-                <div class="card" onclick="goToDevice('${d.id}','${worksiteId}')">
-                    <div class="card-header">
-                        <div class="card-title">${escapeHtml(d.name)} <span class="type-badge ${typeClass[d.device_type] || ''}">${d.device_type}</span></div>
-                        ${isAdmin ? `<div class="card-actions"><button onclick="event.stopPropagation();editDevice('${d.id}')">✏️</button><button onclick="event.stopPropagation();delDevice('${d.id}','${escapeHtml(d.name)}')">🗑️</button></div>` : ''}
-                    </div>
-                    <div class="card-meta">${statusEmoji[d.status]} ${d.status}</div>
-                    ${d.description ? `<div class="card-meta">${escapeHtml(d.description.substring(0,50))}</div>` : ''}
-                    <div class="card-stats">📷 ${photoCount}张 · ${formatDate(d.created_at)}</div>
-                </div>`;
-        }).join('');
-        
-        document.getElementById('btn-add-device').style.display = isAdmin ? '' : 'none';
-        
-    } catch (err) {
-        list.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败</p></div>`;
-    }
-}
+function goHome(){showPage('home');loadStats();loadWsListForHome();updateUserDisplay();}
+window.goHome=goHome;
 
-// ============ 添加工点 ============
-async function submitWorksite(e) {
-    e.preventDefault();
-    const org = document.getElementById('ws-org').value;
-    const name = document.getElementById('ws-name').value.trim();
-    
-    if (!name) { showToast('请输入名称'); return; }
-    
-    try {
-        await supabaseRequest('worksites', {
-            method: 'POST',
-            body: { org, name, created_by: ADMIN_UUID }
-        });
-        showToast('添加成功');
-        closeModal('ws-modal');
-        loadWorksites();
-    } catch (err) {
-        showToast('添加失败: ' + err.message);
-    }
-}
+document.addEventListener('DOMContentLoaded',checkLogin);
 
-// ============ 编辑工点 ============
-let editingWsId = null;
-function editWorksite(id, org, name) {
-    editingWsId = id;
-    document.getElementById('ws-modal-title').textContent = '编辑工点';
-    document.getElementById('ws-org').value = org;
-    document.getElementById('ws-name').value = name;
-    document.getElementById('ws-modal').classList.remove('hidden');
-}
-
-async function deleteWorksite(id, name) {
-    if (!confirm(`确定删除「${name}」？`)) return;
-    try {
-        await supabaseRequest(`worksites?id=eq.${id}`, { method: 'DELETE' });
-        showToast('已删除');
-        loadWorksites();
-    } catch (err) {
-        showToast('删除失败');
-    }
-}
-
-// ============ 提交设备 ============
-async function submitDevice(e) {
-    e.preventDefault();
-    const name = document.getElementById('dev-name').value.trim();
-    const device_type = document.getElementById('dev-type').value;
-    const status = document.getElementById('dev-status').value;
-    const description = document.getElementById('dev-desc').value.trim();
-    
-    if (!name) { showToast('请输入名称'); return; }
-    
-    try {
-        if (editingDevId) {
-            await supabaseRequest(`devices?id=eq.${editingDevId}`, {
-                method: 'PATCH',
-                body: { name, device_type, status, description }
-            });
-            showToast('更新成功');
-        } else {
-            await supabaseRequest('devices', {
-                method: 'POST',
-                body: { worksite_id: currentWsId, name, device_type, status, description, created_by: ADMIN_UUID }
-            });
-            showToast('添加成功');
-        }
-        closeModal('dev-modal');
-        loadDevices(currentWsId, currentWsName);
-    } catch (err) {
-        showToast('保存失败: ' + err.message);
-    }
-}
-
-// ============ 编辑/删除设备 ============
-let editingDevId = null;
-function editDevice(id) {
-    // 先获取数据再编辑
-    supabaseRequest('devices', { params: { id: `eq.${id}`, select: '*' } }).then(data => {
-        if (data && data[0]) {
-            editingDevId = id;
-            document.getElementById('dev-modal-title').textContent = '编辑设备';
-            document.getElementById('dev-name').value = data[0].name;
-            document.getElementById('dev-type').value = data[0].device_type;
-            document.getElementById('dev-status').value = data[0].status;
-            document.getElementById('dev-desc').value = data[0].description || '';
-            document.getElementById('dev-modal').classList.remove('hidden');
-        }
-    });
-}
-
-async function deleteDevice(id, name) {
-    if (!confirm(`确定删除「${name}」？`)) return;
-    try {
-        await supabaseRequest(`devices?id=eq.${id}`, { method: 'DELETE' });
-        showToast('已删除');
-        loadDevices(currentWsId, currentWsName);
-    } catch (err) {
-        showToast('删除失败');
-    }
-}
-
-// ============ 全局变量 ============
-let currentWsId = null;
-let currentWsName = '';
-
-// ============ 导航 ============
-function goToWorksite(id) {
-    currentWsId = id;
-    // 获取工点名称
-    supabaseRequest('worksites', { params: { id: `eq.${id}`, select: 'name' } }).then(data => {
-        currentWsName = data[0]?.name || '工点';
-        loadDevices(id, currentWsName);
-    });
-    showPage('worksite-page');
-}
-
-function goToDevice(id, wsId) {
-    window.location.href = `device.html?id=${id}&worksite=${wsId}`;
-}
-
-function goHome() {
-    currentWsId = null;
-    loadWorksites();
-    showPage('main-page');
-}
-
-// ============ 弹窗 ============
-function openAddWorksite() {
-    editingWsId = null;
-    document.getElementById('ws-modal-title').textContent = '添加工点';
-    document.getElementById('ws-org').value = '局指';
-    document.getElementById('ws-name').value = '';
-    document.getElementById('ws-modal').classList.remove('hidden');
-}
-
-function openAddDevice() {
-    editingDevId = null;
-    document.getElementById('dev-modal-title').textContent = '添加设备';
-    document.getElementById('dev-name').value = '';
-    document.getElementById('dev-type').value = '大中型设备';
-    document.getElementById('dev-status').value = '正常';
-    document.getElementById('dev-desc').value = '';
-    document.getElementById('dev-modal').classList.remove('hidden');
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-}
-
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.remove('hidden');
-    setTimeout(() => t.classList.add('hidden'), 2000);
-}
-
-// ============ 工具 ============
-function escapeHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s || '';
-    return d.innerHTML;
-}
-
-function formatDate(s) {
-    if (!s) return '';
-    const d = new Date(s);
-    return `${d.getMonth()+1}月${d.getDate()}日`;
-}
-
-// ============ 初始化 ============
-document.addEventListener('DOMContentLoaded', () => {
-    // 检查是否已登录
-    checkAdminStatus();
-    
-    if (!isAdmin) {
-        showPage('login-page');
-    } else {
-        showPage('main-page');
-        loadWorksites();
-    }
-    
-    // 登录表单
-    document.getElementById('login-form').onsubmit = (e) => {
-        e.preventDefault();
-        const pw = document.getElementById('password').value;
-        if (doLogin(pw)) {
-            showToast('登录成功');
-            showPage('main-page');
-            loadWorksites();
-        } else {
-            showToast('密码错误');
-        }
-    };
-    
-    // 退出
-    document.getElementById('btn-logout').onclick = () => {
-        doLogout();
-        showPage('login-page');
-    };
-    
-    // 事件绑定
-    document.getElementById('btn-add-worksite').onclick = openAddWorksite;
-    document.getElementById('btn-add-device').onclick = openAddDevice;
-    document.getElementById('ws-form').onsubmit = submitWorksite;
-    document.getElementById('dev-form').onsubmit = submitDevice;
-    document.getElementById('btn-home').onclick = goHome;
-    document.getElementById('btn-refresh').onclick = () => {
-        if (currentWsId) loadDevices(currentWsId, currentWsName);
-        else loadWorksites();
-    };
-    
-    // 关闭弹窗
-    document.querySelectorAll('.modal-close').forEach(btn => {
-        btn.onclick = () => closeModal(btn.dataset.close);
-    });
-});
+})();
