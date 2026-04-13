@@ -9,6 +9,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
 // 管理密码（首次设置后保存在数据库）
 const ADMIN_PASSWORD = 'CZ12admin2026';
 
+// 管理员的 UUID（固定值，对应 18006855@qq.com）
+const ADMIN_UUID = '5e09b426-2ad5-4f79-8269-a3bd27c8abcf';
+
 // 当前状态
 let isAdmin = false;
 let currentUser = { email: 'admin' };
@@ -162,7 +165,7 @@ async function submitWorksite(e) {
     try {
         await supabaseRequest('worksites', {
             method: 'POST',
-            body: { org, name, created_by: 'admin' }
+            body: { org, name, created_by: ADMIN_UUID }
         });
         showToast('添加成功');
         closeModal('ws-modal');
@@ -213,7 +216,7 @@ async function submitDevice(e) {
         } else {
             await supabaseRequest('devices', {
                 method: 'POST',
-                body: { worksite_id: currentWsId, name, device_type, status, description, created_by: 'admin' }
+                body: { worksite_id: currentWsId, name, device_type, status, description, created_by: ADMIN_UUID }
             });
             showToast('添加成功');
         }
