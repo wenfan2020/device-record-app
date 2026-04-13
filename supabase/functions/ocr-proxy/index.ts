@@ -10,10 +10,10 @@ const corsHeaders = {
 };
 
 async function getBaiduToken(): Promise<string> {
-  const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${BAIDU_API_KEY}&client_secret=${BAIDU_SECRET_KEY}`;
+  const url = https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id= + BAIDU_API_KEY + &client_secret= + BAIDU_SECRET_KEY;
   const res = await fetch(url, { method: "POST" });
   const data = await res.json();
-  if (!data.access_token) throw new Error("获取 Baidu token 失败: " + JSON.stringify(data));
+  if (!data.access_token) throw new Error("鑾峰彇 Baidu token 澶辫触: " + JSON.stringify(data));
   return data.access_token;
 }
 
@@ -25,19 +25,19 @@ serve(async (req) => {
   try {
     const { image } = await req.json();
     if (!image) {
-      return new Response(JSON.stringify({ error: "缺少 image 参数" }), {
+      return new Response(JSON.stringify({ error: "缂哄皯 image 鍙傛暟" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const token = await getBaiduToken();
-    const ocrUrl = `https://aip.baidubce.com/rest/2.0/ocr/v1/accurate_basic?access_token=${token}`;
-    
+    const ocrUrl = https://aip.baidubce.com/rest/2.0/ocr/v1/accurate_basic?access_token= + token;
+
     const formBody = new URLSearchParams();
     formBody.append("image", image);
     formBody.append("language_type", "CHN_ENG");
-    
+
     const ocrRes = await fetch(ocrUrl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
