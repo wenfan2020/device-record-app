@@ -6,73 +6,78 @@
 <title>CZ12标设备管理系统</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333;font-size:14px;line-height:1.5}
 .page{display:none}.page.active{display:block}
-.header{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
-.header h2{font-size:17px;flex:1}
-.hbtn{background:rgba(255,255,255,0.2);border:none;color:#fff;width:38px;height:38px;border-radius:50%;font-size:16px;cursor:pointer}
-.user-bar{background:#fff;padding:10px 16px;display:flex;justify-content:space-between;font-size:13px;color:#666;border-bottom:1px solid #eee}
-.badge{background:#e3f2fd;color:#1565C0;padding:2px 10px;border-radius:12px;font-size:12px}
-.filter{background:#fff;padding:10px 12px;display:flex;gap:8px;border-bottom:1px solid #eee}
-.filter select,.filter input{flex:1;min-width:90px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px}
-.content{padding:14px;padding-bottom:90px}
-.stats-row{display:flex;gap:12px;margin-bottom:16px}
-.stat-card{flex:1;background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
-.stat-num{font-size:28px;font-weight:700;color:#1565C0}
-.stat-label{font-size:12px;color:#888;margin-top:2px}
-.stat-green .stat-num{color:#2e7d32}
-.stat-orange .stat-num{color:#e65100}
-.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
-.card:active{transform:scale(0.985)}
-.card-head{display:flex;justify-content:space-between;margin-bottom:6px}
-.card-title{font-size:15px;font-weight:600}
-.card-actions button{background:none;border:none;font-size:15px;cursor:pointer}
-.card-meta{font-size:13px;color:#888}
-.card-desc{font-size:12px;color:#aaa}
-.card-foot{font-size:12px;color:#bbb;margin-top:6px;padding-top:6px;border-top:1px solid #f5f5f5}
-.org-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;margin-left:6px}
-.org-juzhi{background:#e3f2fd;color:#1565C0}
-.org-yifenbu{background:#e8f5e9;color:#2e7d32}
-.org-erfenbu{background:#fff3e0;color:#e65100}
-.type-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;margin-left:4px}
-.type-large{background:#e3f2fd;color:#1565C0}
-.type-special{background:#fce4ec;color:#c62828}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
-.dot-green{background:#4caf50}.dot-orange{background:#ff9800}.dot-red{background:#f44336}
-.section-title{font-size:14px;font-weight:600;color:#444;margin:16px 0 10px}
+a{color:#1565C0;text-decoration:none}
+.header{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.header h2{font-size:16px;flex:1}
+.hbtn{background:rgba(255,255,255,0.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:15px;cursor:pointer}
+.user-bar{background:#fff;padding:8px 14px;display:flex;justify-content:space-between;font-size:12px;color:#666;border-bottom:1px solid #eee}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px}
+.b-admin{background:#e3f2fd;color:#1565C0}.b-pending{background:#fff3e0;color:#e65100}.b-green{background:#e8f5e9;color:#2e7d32}.b-yellow{background:#fff8e1;color:#f57c00}.b-red{background:#fce4ec;color:#c62828}
+.filter{background:#fff;padding:8px 12px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #eee}
+.filter select,.filter input{flex:1;min-width:80px;padding:7px 9px;border:1px solid #ddd;border-radius:7px;font-size:13px}
+.filter select{min-width:70px;flex:none}
+.content{padding:12px;padding-bottom:80px}
+.stats-row{display:flex;gap:10px;margin-bottom:14px}
+.stat-card{flex:1;background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.stat-num{font-size:24px;font-weight:700;color:#1565C0}
+.stat-label{font-size:11px;color:#888;margin-top:2px}
+.sg .stat-num{color:#2e7d32}.so .stat-num{color:#e65100}.sr .stat-num{color:#c62828}
+.card{background:#fff;border-radius:12px;padding:13px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card-head{display:flex;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600}
+.card-actions button{background:none;border:none;font-size:14px;cursor:pointer;padding:4px 5px}
+.card-meta{font-size:12px;color:#888;margin-top:3px}
+.card-desc{font-size:12px;color:#aaa;margin-top:3px}
+.card-foot{font-size:11px;color:#bbb;margin-top:6px;padding-top:6px;border-top:1px solid #eee}
+.warn-card{background:#fff8e1!important;border-left:3px solid #ff9800}
+.error-card{background:#fce4ec!important;border-left:3px solid #f44336}
+.ob{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;margin-left:4px}
+.oj{background:#e3f2fd;color:#1565C0}.oy{background:#e8f5e9;color:#2e7d32}.oe{background:#fff3e0;color:#e65100}
+.ot{background:#e3f2fd;color:#1565C0}.os{background:#fce4ec;color:#c62828}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.dg{background:#4caf50}.do{background:#ff9800}.dr{background:#f44336}.db{background:#2196f3}
+.sec-title{font-size:13px;font-weight:600;color:#444;margin:14px 0 8px}
 .empty{text-align:center;padding:50px 20px}
-.empty-icon{font-size:50px;margin-bottom:10px}
-.fab{position:fixed;right:18px;bottom:22px;width:54px;height:54px;background:#1565C0;color:#fff;border:none;border-radius:50%;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(21,101,192,0.45);z-index:50}
+.empty-icon{font-size:48px;margin-bottom:10px}
+.fab{position:fixed;right:16px;bottom:20px;width:52px;height:52px;background:#1565C0;color:#fff;border:none;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 4px 14px rgba(21,101,192,0.4);z-index:50}
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1565C0,#0d47a1)}
-.login-box{background:#fff;border-radius:16px;padding:36px 28px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
-.login-box h1{font-size:20px;color:#1565C0;margin-bottom:4px;text-align:center}
-.login-box .sub{color:#888;font-size:12px;margin-bottom:24px;text-align:center}
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:13px;color:#555;margin-bottom:5px}
-.form-group input,.form-group select{width:100%;padding:11px 13px;border:1.5px solid #ddd;border-radius:10px;font-size:15px}
+.login-box{background:#fff;border-radius:16px;padding:32px 24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+.login-box h1{font-size:18px;color:#1565C0;margin-bottom:3px;text-align:center}
+.login-box .sub{color:#888;font-size:11px;margin-bottom:22px;text-align:center}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:#555;margin-bottom:4px;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:9px;font-size:14px}
 .form-group input:focus{outline:none;border-color:#1565C0}
-.btn{width:100%;padding:13px;background:#1565C0;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
-.btn:active{background:#0d47a1}
+.btn{width:100%;padding:12px;background:#1565C0;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;display:block;text-align:center}
 .btn-cancel{background:#f0f0f0;color:#666}
 .btn-danger{background:#e53935}
-.hint{background:#e3f2fd;border-radius:10px;padding:13px;margin-top:18px;font-size:13px;color:#1565C0;line-height:1.7}
-.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto}
+.hint{background:#e3f2fd;border-radius:9px;padding:12px;margin-top:16px;font-size:12px;color:#1565C0;line-height:1.6}
+.tac{text-align:center}.mt8{margin-top:8px}.mt12{margin-top:12px}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
 .modal.hidden{display:none}
-.modal-box{background:#fff;border-radius:16px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
-.modal-head{padding:16px 18px;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
-.modal-head h3{font-size:16px}
-.modal-close{background:none;border:none;font-size:24px;color:#bbb;cursor:pointer}
-.modal-body{padding:18px}
-.modal-body .form-group{margin-bottom:12px}
-.modal-foot{padding:14px 18px;border-top:1px solid #eee;display:flex;gap:10px}
+.modal-box{background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:92vh;overflow-y:auto}
+.modal-head{padding:14px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{font-size:15px}
+.modal-close{background:none;border:none;font-size:22px;color:#bbb;cursor:pointer}
+.modal-body{padding:16px}
+.modal-body .form-group{margin-bottom:11px}
+.modal-foot{padding:12px 16px;border-top:1px solid #eee;display:flex;gap:8px}
 .modal-foot .btn{flex:1}
-.confirm-box{background:#fff;border-radius:16px;width:100%;max-width:310px;padding:24px;text-align:center}
-.confirm-box p{font-size:15px;margin-bottom:20px}
-.btn-row{display:flex;gap:10px}
-.btn-row .btn{flex:1}
-.toast{position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 22px;border-radius:22px;font-size:14px;z-index:300;opacity:.95}
+.confirm-box{background:#fff;border-radius:16px;width:100%;max-width:300px;padding:22px;text-align:center}
+.confirm-box p{font-size:14px;margin-bottom:18px}
+.btn-row{display:flex;gap:8px}.btn-row .btn{flex:1}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;z-index:300;opacity:.95;pointer-events:none}
 .loading{text-align:center;padding:40px;color:#aaa}
 .hidden{display:none!important}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px}
+.pitem{aspect-ratio:1;overflow:hidden;border-radius:8px;background:#f5f5f5;position:relative}
+.pitem img{width:100%;height:100%;object-fit:cover}
+.pdel{position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:none}
+.pitem:hover .pdel{display:block}
+.padd{aspect-ratio:1;border:2px dashed #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#ccc;cursor:pointer}
 </style>
 </head>
 <body>
@@ -80,245 +85,165 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div id="page-login" class="page active">
 <div class="login-wrap">
 <div class="login-box">
-<h1>CZ12标设备管理</h1>
+<h1>CZ12标设备管理系统</h1>
 <div class="sub">川藏铁路雅安至林芝段 CZSCZQ-12标</div>
-<form id="login-form">
-<div class="form-group"><label>管理密码</label><input type="password" id="pwd-input" placeholder="请输入管理密码" required></div>
+<div id="login-area">
+<form id="login-form" onsubmit="handleLogin(event)">
+<div class="form-group"><label>邮箱</label><input type="email" id="li-email" placeholder="请输入邮箱" required></div>
+<div class="form-group"><label>密码</label><input type="password" id="li-pwd" placeholder="请输入密码" required></div>
 <button type="submit" class="btn">登 录</button>
 </form>
-<div class="hint"><strong>管理员密码</strong>密码: <strong>CZ12admin2026</strong></div>
+<div class="hint tac">还没有账号？<a href="#" onclick="showReg()">立即注册</a></div>
+</div>
+<div id="reg-area" class="hidden">
+<form id="reg-form" onsubmit="handleReg(event)">
+<div class="form-group"><label>姓名</label><input type="text" id="reg-name" placeholder="请输入姓名" required></div>
+<div class="form-group"><label>邮箱</label><input type="email" id="reg-email" placeholder="请输入邮箱" required></div>
+<div class="form-group"><label>密码</label><input type="password" id="reg-pwd" placeholder="设置密码" required minlength="6"></div>
+<button type="submit" class="btn">注册并提交申请</button>
+</form>
+<div class="hint tac">已有账号？<a href="#" onclick="showLoginForm()">返回登录</a></div>
+</div>
+<div id="pending-area" class="hidden">
+<div class="hint tac"><strong>注册成功！</strong><br>账号正在等待管理员审批。<div class="mt12"><a href="#" onclick="showLoginForm()">返回登录</a></div></div>
 </div>
 </div>
 </div>
 
-<div id="page-main" class="page">
+<div id="page-home" class="page">
 <div class="header">
 <h2>CZ12标设备管理</h2>
-<button class="hbtn" onclick="loadDashboard()" title="刷新">R</button>
-<button class="hbtn" onclick="exportExcel()" title="导出">S</button>
-<button class="hbtn" onclick="logout()" title="退出">E</button>
+<button class="hbtn" onclick="refreshAll()" title="刷新">R</button>
+<button class="hbtn" onclick="doExport()" title="导出">S</button>
+<button class="hbtn" onclick="showUser()" title="用户">U</button>
 </div>
-<div class="user-bar"><span>管理员</span><span class="badge">全部数据</span></div>
+<div class="user-bar">
+<span id="u-name">-</span>
+<span id="u-badge" class="badge">-</span>
+</div>
 <div class="filter">
-<select id="f-org" onchange="loadDashboard()"><option value="">全部单位</option><option value="局指">局指</option><option value="一分部">一分部</option><option value="二分部">二分部</option></select>
-<input type="text" id="f-search-ws" placeholder="搜索工点..." oninput="loadDashboard()">
+<select id="f-org" onchange="loadStats()"><option value="">全部单位</option><option value="局指">局指</option><option value="一分部">一分部</option><option value="二分部">二分部</option></select>
 </div>
-<div class="content"><div id="ws-list"><div class="loading">加载中...</div></div></div>
-<button class="fab" id="btn-add-ws" onclick="openAddWs()">+</button>
+<div class="content">
+<div id="stats-area"><div class="loading">加载中...</div></div>
+<div class="sec-title">工点列表</div>
+<div id="ws-list"><div class="loading">加载中...</div></div>
+</div>
+<button class="fab" id="fab-ws" onclick="showAddWs()">+</button>
 </div>
 
-<div id="page-worksite" class="page">
+<div id="page-ws" class="page">
 <div class="header">
 <button class="hbtn" onclick="goHome()">L</button>
-<h2 id="ws-title">工点设备</h2>
-<button class="hbtn" onclick="loadWsDevices()">R</button>
+<h2 id="ws-title2">工点详情</h2>
+<button class="hbtn" onclick="refreshWsDevs()">R</button>
 </div>
 <div class="filter">
-<select id="f-type" onchange="filterDevs()"><option value="">全部类别</option><option value="大中型设备">大中型设备</option><option value="特种设备">特种设备</option></select>
-<select id="f-status" onchange="filterDevs()"><option value="">全部状态</option><option value="正常">正常</option><option value="维修中">维修中</option><option value="报废">报废</option></select>
-<input type="text" id="f-search" placeholder="搜索设备..." oninput="filterDevs()">
+<select id="f-dev-type" onchange="loadWsDevs()"><option value="">全部分类</option><option value="大中型设备">大中型设备</option><option value="特种设备">特种设备</option></select>
+<select id="f-dev-status" onchange="loadWsDevs()"><option value="">全部状态</option><option value="正常">正常</option><option value="维修中">维修中</option><option value="停用">停用</option><option value="报废">报废</option></select>
 </div>
-<div class="content"><div id="dev-list"><div class="loading">加载中...</div></div></div>
-<button class="fab" id="btn-add-dev" onclick="openAddDev()">+</button>
+<div class="filter" style="background:#f9f9f9">
+<input type="text" id="f-dev-search" placeholder="搜索设备..." oninput="loadWsDevs()" style="max-width:none">
+</div>
+<div class="content">
+<div id="ws-dev-list"><div class="loading">加载中...</div></div>
+</div>
+<button class="fab" onclick="showAddDev()">+</button>
 </div>
 
-<div id="modal-ws" class="modal hidden">
-<div class="modal-box">
-<div class="modal-head"><h3 id="ws-modal-title">添加工点</h3><button class="modal-close" onclick="modal('modal-ws',false)">x</button></div>
-<form onsubmit="submitWs(event)">
-<div class="modal-body">
-<div class="form-group"><label>所属单位</label><select id="ws-org"><option value="局指">局指</option><option value="一分部">一分部</option><option value="二分部">二分部</option></select></div>
-<div class="form-group"><label>工点名称</label><input type="text" id="ws-name" placeholder="如：一号拌合站" required></div>
+<div id="page-dev" class="page">
+<div class="header">
+<button class="hbtn" id="dev-back">L</button>
+<h2 id="dev-title2">设备详情</h2>
+<button class="hbtn" onclick="editDev()">E</button>
 </div>
-<div class="modal-foot"><button type="button" class="btn btn-cancel" onclick="modal('modal-ws',false)">取消</button><button type="submit" class="btn">保存</button></div>
+<div class="content">
+<div id="dev-detail"><div class="loading">加载中...</div></div>
+</div>
+</div>
+
+<div id="m-ws" class="modal hidden">
+<div class="modal-box">
+<div class="modal-head"><h3 id="m-ws-title">添加工点</h3><button class="modal-close" onclick="modal('m-ws',false)">x</button></div>
+<form onsubmit="saveWs(event)">
+<div class="modal-body">
+<input type="hidden" id="wsf-id">
+<div class="form-group"><label>所属单位</label><select id="wsf-org"><option value="局指">局指</option><option value="一分部">一分部</option><option value="二分部">二分部</option></select></div>
+<div class="form-group"><label>工点名称</label><input type="text" id="wsf-name" placeholder="如：一号拌合站" required></div>
+<div class="form-group"><label>位置</label><input type="text" id="wsf-loc" placeholder="如：DK100+500"></div>
+<div class="form-group"><label>备注</label><textarea id="wsf-note" rows="2"></textarea></div>
+</div>
+<div class="modal-foot">
+<button type="button" class="btn btn-cancel" onclick="modal('m-ws',false)">取消</button>
+<button type="submit" class="btn">保存</button>
+</div>
 </form>
 </div>
 </div>
 
-<div id="modal-dev" class="modal hidden">
+<div id="m-dev" class="modal hidden">
 <div class="modal-box">
-<div class="modal-head"><h3 id="dev-modal-title">添加设备</h3><button class="modal-close" onclick="modal('modal-dev',false)">x</button></div>
-<form onsubmit="submitDev(event)">
+<div class="modal-head"><h3 id="m-dev-title">添加设备</h3><button class="modal-close" onclick="modal('m-dev',false)">x</button></div>
+<form onsubmit="saveDev(event)">
 <div class="modal-body">
-<div class="form-group"><label>设备名称</label><input type="text" id="dev-name" placeholder="如：混凝土搅拌站" required></div>
-<div class="form-group"><label>设备类别</label><select id="dev-type"><option value="大中型设备">大中型设备</option><option value="特种设备">特种设备</option></select></div>
-<div class="form-group"><label>状态</label><select id="dev-status"><option value="正常">正常</option><option value="维修中">维修中</option><option value="报废">报废</option></select></div>
-<div class="form-group"><label>备注</label><input type="text" id="dev-desc" placeholder="备注信息（选填）"></div>
+<input type="hidden" id="df-id">
+<div class="form-group"><label>所属工点</label><select id="df-ws" required></select></div>
+<div class="form-group"><label>设备名称</label><input type="text" id="df-name" placeholder="如：混凝土搅拌站" required></div>
+<div class="form-group"><label>类别</label><select id="df-type"><option value="大中型设备">大中型设备</option><option value="特种设备">特种设备</option></select></div>
+<div class="form-group"><label>状态</label><select id="df-status"><option value="正常">正常</option><option value="维修中">维修中</option><option value="停用">停用</option><option value="报废">报废</option></select></div>
+<div class="form-group"><label>型号</label><input type="text" id="df-model" placeholder="设备型号"></div>
+<div class="form-group"><label>出厂编号</label><input type="text" id="df-serial" placeholder="出厂编号"></div>
+<div class="form-group"><label>厂家</label><input type="text" id="df-mfr" placeholder="生产厂家"></div>
+<div class="form-group"><label>出厂日期</label><input type="date" id="df-mfg"></div>
+<div class="form-group"><label>购置日期</label><input type="date" id="df-pur"></div>
+<div class="form-group"><label>描述</label><textarea id="df-desc" rows="2"></textarea></div>
 </div>
-<div class="modal-foot"><button type="button" class="btn btn-cancel" onclick="modal('modal-dev',false)">取消</button><button type="submit" class="btn">保存</button></div>
+<div class="modal-foot">
+<button type="button" class="btn btn-cancel" onclick="modal('m-dev',false)">取消</button>
+<button type="submit" class="btn">保存</button>
+</div>
 </form>
 </div>
 </div>
 
-<div id="modal-confirm" class="modal hidden">
-<div class="confirm-box"><p id="confirm-msg">确定要删除吗？</p>
-<div class="btn-row"><button class="btn btn-cancel" onclick="modal('modal-confirm',false)">取消</button><button class="btn btn-danger" onclick="doConfirm()">删除</button></div>
+<div id="m-photo" class="modal hidden">
+<div class="modal-box">
+<div class="modal-head"><h3>设备照片</h3><button class="modal-close" onclick="modal('m-photo',false)">x</button></div>
+<div class="modal-body">
+<div id="ph-dev-name" style="margin-bottom:10px;font-size:13px"></div>
+<div class="pgrid" id="ph-grid"><div class="loading">加载中...</div></div>
+<div class="padd mt8" onclick="doPhotoUpload()">+</div>
+<input type="file" id="ph-input" accept="image/*" capture="environment" multiple style="display:none" onchange="handlePhUpload(event)">
+</div>
+<div class="modal-foot"><button class="btn btn-cancel" onclick="modal('m-photo',false)">关闭</button></div>
+</div>
+</div>
+
+<div id="m-confirm" class="modal hidden">
+<div class="confirm-box">
+<p id="cf-msg">确定删除？</p>
+<div class="btn-row">
+<button class="btn btn-cancel" onclick="modal('m-confirm',false)">取消</button>
+<button class="btn btn-danger" onclick="doCf()">删除</button>
+</div>
+</div>
+</div>
+
+<div id="m-user" class="modal hidden">
+<div class="modal-box">
+<div class="modal-head"><h3>用户中心</h3><button class="modal-close" onclick="modal('m-user',false)">x</button></div>
+<div class="modal-body">
+<div id="uinfo" style="margin-bottom:14px"></div>
+</div>
+<div class="modal-foot">
+<button class="btn btn-cancel" onclick="modal('m-user',false)">关闭</button>
+<button class="btn btn-danger" onclick="doLogout()">退出登录</button>
+</div>
 </div>
 </div>
 
 <div id="toast" class="toast hidden"></div>
 
-<script>
-(function(){
-'use strict';
-var SB_URL='https://thvpdhayyyfgddzwffzv.supabase.co';
-var SB_KEY='sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
-var ADMIN_PWD='CZ12admin2026';
-var ADMIN_UUID='5e09b426-2ad5-4f79-8269-a3bd27c8abcf';
-
-function req(table,opt){
-  return new Promise(function(resolve,reject){
-    opt=opt||{};
-    var method=opt.method||'GET';
-    var body=opt.body;
-    var params=opt.params||{};
-    var url=SB_URL+'/rest/v1/'+table;
-    var q=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
-    if(q)url+='?'+q;
-    var headers={'Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY,'Content-Type':'application/json'};
-    if(body)headers['Prefer']='return=representation';
-    fetch(url,{method:method,headers:headers,body:body?JSON.stringify(body):undefined})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d&&typeof d==='object'&&!Array.isArray(d)&&d.items){resolve(d.items);}
-      else if(Array.isArray(d)){resolve(d);}
-      else if(d&&typeof d==='object'){resolve([d]);}
-      else{resolve([]);}
-    }).catch(reject);
-  });
-}
-
-function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-function fmt(s){if(!s)return'';var d=new Date(s);return(d.getMonth()+1)+'月'+d.getDate()+'日';}
-function orgClass(o){return o==='局指'?'org-juzhi':o==='一分部'?'org-yifenbu':'org-erfenbu';}
-function typeClass(t){return t==='大中型设备'?'type-large':'type-special';}
-function statusDot(s){return s==='正常'?'dot-green':s==='维修中'?'dot-orange':'dot-red';}
-
-var S={isAdmin:false,currentWs:null,editingWs:null,editingDev:null,confirmCb:null};
-
-function router(page){
-  var pages=document.querySelectorAll('.page');
-  for(var i=0;i<pages.length;i++)pages[i].classList.remove('active');
-  var el=document.getElementById('page-'+page);
-  if(el)el.classList.add('active');
-  window.scrollTo(0,0);
-  if(page==='main')loadDashboard();
-  if(page==='worksite'&&S.currentWs)loadWsDevices();
-}
-
-function modal(id,show){var el=document.getElementById(id);if(show)el.classList.remove('hidden');else el.classList.add('hidden');}
-function confirm(msg,cb){document.getElementById('confirm-msg').textContent=msg;S.confirmCb=cb;modal('modal-confirm',true);}
-function doConfirm(){modal('modal-confirm',false);if(S.confirmCb)S.confirmCb();}
-function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.add('hidden');},2500);}
-
-function initLogin(){
-  S.isAdmin=localStorage.getItem('cz12_admin')==='true';
-  document.getElementById('login-form').onsubmit=function(e){e.preventDefault();var pwd=document.getElementById('pwd-input').value;if(pwd===ADMIN_PWD){localStorage.setItem('cz12_admin','true');S.isAdmin=true;toast('登录成功');router('main');}else{toast('密码错误');}};
-  if(S.isAdmin)router('main');else router('login');
-}
-
-async function loadDashboard(){
-  var list=document.getElementById('ws-list');
-  list.innerHTML='<div class="loading">加载中...</div>';
-  try{
-    var orgF=document.getElementById('f-org').value;
-    var searchF=document.getElementById('f-search-ws').value.trim().toLowerCase();
-    var wss=await req('worksites',{params:{select:'*,devices(count)',order:'created_at.desc'}});
-    if(orgF)wss=wss.filter(function(w){return w.org===orgF;});
-    if(searchF)wss=wss.filter(function(w){return w.name.toLowerCase().indexOf(searchF)!==-1;});
-    var byOrg={'局指':0,'一分部':0,'二分部':0};
-    var totalDev=0;
-    for(var j=0;j<wss.length;j++){var c=wss[j].devices&&wss[j].devices[0]?wss[j].devices[0].count:0;totalDev+=c;if(byOrg[wss[j].org]!==undefined)byOrg[wss[j].org]+=c;}
-    var html='<div class="stats-row"><div class="stat-card"><div class="stat-num">'+wss.length+'</div><div class="stat-label">工点数</div></div><div class="stat-card"><div class="stat-num">'+totalDev+'</div><div class="stat-label">设备总数</div></div></div>';
-    html+='<div class="stats-row">';
-    html+='<div class="stat-card"><div class="stat-num">'+byOrg['局指']+'</div><div class="stat-label">局指</div></div>';
-    html+='<div class="stat-card stat-green"><div class="stat-num">'+byOrg['一分部']+'</div><div class="stat-label">一分部</div></div>';
-    html+='<div class="stat-card stat-orange"><div class="stat-num">'+byOrg['二分部']+'</div><div class="stat-label">二分部</div></div></div>';
-    html+='<div class="section-title">工点列表</div>';
-    if(!wss||wss.length===0){html+='<div class="empty"><div class="empty-icon">&#127968;</div><p>暂无工点<br><small>点击下方 + 添加</small></p></div>';}
-    else{for(var i=0;i<wss.length;i++){var w=wss[i];var cnt=w.devices&&w.devices[0]?w.devices[0].count:0;html+='<div class="card" onclick="openWs(&quot;'+w.id+'&quot;,&quot;'+esc(w.name)+'&quot;)"><div class="card-head"><div class="card-title">'+esc(w.name)+' <span class="org-badge '+orgClass(w.org)+'">'+w.org+'</span></div>'+(S.isAdmin?'<div class="card-actions"><button onclick="event.stopPropagation();editWs(&quot;'+w.id+'&quot;,&quot;'+w.org+'&quot;,&quot;'+esc(w.name)+'&quot;)">E</button><button onclick="event.stopPropagation();delWs(&quot;'+w.id+'&quot;,&quot;'+esc(w.name)+'&quot;)">D</button></div>':'')+'</div><div class="card-meta">创建 '+fmt(w.created_at)+'</div><div class="card-foot">设备:'+cnt+'台</div></div>';}}
-    list.innerHTML=html;
-    document.getElementById('btn-add-ws').style.display=S.isAdmin?'':'none';
-  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">X</div><p>加载失败: '+esc(e.message)+'</p></div>';}
-}
-window.loadDashboard=loadDashboard;
-
-function openAddWs(){S.editingWs=null;document.getElementById('ws-modal-title').textContent='添加工点';document.getElementById('ws-org').value='局指';document.getElementById('ws-name').value='';modal('modal-ws',true);}
-window.openAddWs=openAddWs;
-function editWs(id,org,name){S.editingWs=id;document.getElementById('ws-modal-title').textContent='编辑工点';document.getElementById('ws-org').value=org;document.getElementById('ws-name').value=name;modal('modal-ws',true);}
-window.editWs=editWs;
-async function submitWs(e){e.preventDefault();var org=document.getElementById('ws-org').value;var name=document.getElementById('ws-name').value.trim();if(!name){toast('请输入名称');return;}try{if(S.editingWs){await req('worksites?id=eq.'+S.editingWs,{method:'PATCH',body:{org:org,name:name}});toast('更新成功');}else{await req('worksites',{method:'POST',body:{org:org,name:name,created_by:ADMIN_UUID}});toast('添加成功');}modal('modal-ws',false);loadDashboard();}catch(e){toast('保存失败: '+e.message);}}
-window.submitWs=submitWs;
-async function delWs(id,name){confirm('删除工点「'+name+'」？',async function(){try{await req('worksites?id=eq.'+id,{method:'DELETE'});toast('已删除');loadDashboard();}catch(e){toast('删除失败');}});}
-window.delWs=delWs;
-function openWs(id,name){S.currentWs={id:id,name:name};document.getElementById('ws-title').textContent=name;router('worksite');}
-window.openWs=openWs;
-
-async function loadWsDevices(){
-  var list=document.getElementById('dev-list');
-  list.innerHTML='<div class="loading">加载中...</div>';
-  if(!S.currentWs)return;
-  try{
-    var typeF=document.getElementById('f-type').value;
-    var statusF=document.getElementById('f-status').value;
-    var searchF=document.getElementById('f-search').value.trim().toLowerCase();
-    var devs=await req('devices',{params:{select:'*,photos(count)',eq_worksite_id:S.currentWs.id,order:'created_at.desc'}});
-    if(typeF)devs=devs.filter(function(d){return d.device_type===typeF;});
-    if(statusF)devs=devs.filter(function(d){return d.status===statusF;});
-    if(searchF)devs=devs.filter(function(d){return d.name.toLowerCase().indexOf(searchF)!==-1;});
-    if(!devs||devs.length===0){list.innerHTML='<div class="empty"><div class="empty-icon">X</div><p>'+(typeF||statusF||searchF?'无筛选结果':'暂无设备')+'<br><small>点击下方 + 添加</small></p></div>';return;}
-    var html='';
-    for(var i=0;i<devs.length;i++){var d=devs[i];var cnt=d.photos&&d.photos[0]?d.photos[0].count:0;var desc=d.description?'<div class="card-desc">'+esc(d.description.substring(0,40))+'</div>':'';html+='<div class="card"><div class="card-head"><div class="card-title">'+esc(d.name)+' <span class="type-badge '+typeClass(d.device_type)+'">'+d.device_type+'</span></div>'+(S.isAdmin?'<div class="card-actions"><button onclick="editDev(&quot;'+d.id+'&quot;)">E</button><button onclick="delDev(&quot;'+d.id+'&quot;,&quot;'+esc(d.name)+'&quot;)">D</button></div>':'')+'</div><div class="card-meta"><span class="dot '+statusDot(d.status)+'"></span>'+d.status+'</div>'+desc+'<div class="card-foot">照片:'+cnt+'张 · '+fmt(d.created_at)+'</div></div>';}
-    list.innerHTML=html;
-    document.getElementById('btn-add-dev').style.display=S.isAdmin?'':'none';
-  }catch(e){list.innerHTML='<div class="empty"><div class="empty-icon">X</div><p>加载失败: '+esc(e.message)+'</p></div>';}
-}
-window.loadWsDevices=loadWsDevices;
-function filterDevs(){loadWsDevices();}
-window.filterDevs=filterDevs;
-
-function openAddDev(){S.editingDev=null;document.getElementById('dev-modal-title').textContent='添加设备';document.getElementById('dev-name').value='';document.getElementById('dev-type').value='大中型设备';document.getElementById('dev-status').value='正常';document.getElementById('dev-desc').value='';modal('modal-dev',true);}
-window.openAddDev=openAddDev;
-async function editDev(id){try{var devs=await req('devices',{params:{id:'eq.'+id,select:'*',limit:1}});if(devs&&devs[0]){var d=devs[0];S.editingDev=id;document.getElementById('dev-modal-title').textContent='编辑设备';document.getElementById('dev-name').value=d.name;document.getElementById('dev-type').value=d.device_type;document.getElementById('dev-status').value=d.status;document.getElementById('dev-desc').value=d.description||'';modal('modal-dev',true);}}catch(e){toast('加载失败');}}
-window.editDev=editDev;
-async function submitDev(e){e.preventDefault();var name=document.getElementById('dev-name').value.trim();var device_type=document.getElementById('dev-type').value;var status=document.getElementById('dev-status').value;var description=document.getElementById('dev-desc').value.trim();if(!name){toast('请输入名称');return;}try{if(S.editingDev){await req('devices?id=eq.'+S.editingDev,{method:'PATCH',body:{name:name,device_type:device_type,status:status,description:description}});toast('更新成功');}else{await req('devices',{method:'POST',body:{worksite_id:S.currentWs.id,name:name,device_type:device_type,status:status,description:description,created_by:ADMIN_UUID}});toast('添加成功');}modal('modal-dev',false);loadWsDevices();}catch(e){toast('保存失败: '+e.message);}}
-window.submitDev=submitDev;
-async function delDev(id,name){confirm('删除设备「'+name+'」？',async function(){try{await req('devices?id=eq.'+id,{method:'DELETE'});toast('已删除');loadWsDevices();}catch(e){toast('删除失败');}});}
-window.delDev=delDev;
-
-async function exportExcel(){
-  try{
-    var wss=await req('worksites',{params:{select:'*',order:'org.asc,created_at.desc'}});
-    var html='<table border="1" style="border-collapse:collapse;font-size:12px;">';
-    html+='<tr style="background:#1565C0;color:#fff"><th>序号</th><th>单位</th><th>工点</th><th>设备名称</th><th>类别</th><th>状态</th><th>备注</th><th>日期</th></tr>';
-    var row=1;
-    for(var i=0;i<wss.length;i++){
-      var ws=wss[i];
-      var devs=await req('devices',{params:{eq_worksite_id:ws.id,select:'name,device_type,status,description,created_at',order:'created_at.desc'}});
-      if(!devs||devs.length===0){
-        html+='<tr><td>'+(row++)+'</td><td>'+esc(ws.org)+'</td><td>'+esc(ws.name)+'</td><td colspan="5" style="color:#999">无设备</td></tr>';
-      }else{
-        for(var j=0;j<devs.length;j++){
-          var d=devs[j];
-          html+='<tr><td>'+(row++)+'</td><td>'+esc(ws.org)+'</td><td>'+esc(ws.name)+'</td><td>'+esc(d.name)+'</td><td>'+esc(d.device_type)+'</td><td>'+esc(d.status)+'</td><td>'+(d.description?esc(d.description):'')+'</td><td>'+fmt(d.created_at)+'</td></tr>';
-        }
-      }
-    }
-    html+='</table>';
-    var blob=new Blob([html],{type:'application/vnd.ms-excel'});
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='CZ12设备清单_'+new Date().toISOString().slice(0,10)+'.xls';a.click();
-    toast('导出成功');
-  }catch(e){toast('导出失败: '+e.message);}
-}
-window.exportExcel=exportExcel;
-
-function logout(){localStorage.removeItem('cz12_admin');S.isAdmin=false;router('login');}
-window.logout=logout;
-function goHome(){router('main');}
-window.goHome=goHome;
-
-document.addEventListener('DOMContentLoaded',initLogin);
-})();
-</script>
+<script src="js/main.js"></script>
 </body>
 </html>
