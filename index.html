@@ -4,45 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1565C0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>CZ12标设备管理</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .page { display: none; }
+        .page:not(.hidden) { display: block; }
+        .hidden { display: none !important; }
+        
+        /* 登录页 */
+        .login-container { max-width: 400px; margin: 80px auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); text-align: center; }
+        .login-container h1 { font-size: 20px; color: #1565C0; margin-bottom: 8px; }
+        .login-container p { color: #666; font-size: 14px; margin-bottom: 24px; }
+        .login-form .form-group { margin-bottom: 16px; text-align: left; }
+        .login-form label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; font-weight: 500; }
+        .login-form input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+        .login-form input:focus { outline: none; border-color: #1565C0; }
+        .btn-primary { width: 100%; padding: 14px; background: #1565C0; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .btn-primary:active { background: #0d47a1; }
+        .admin-note { margin-top: 20px; padding: 12px; background: #e3f2fd; border-radius: 8px; font-size: 13px; color: #1565C0; }
+        
+        /* 主页 */
+        .header { background: #1565C0; color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+        .header h2 { font-size: 17px; flex: 1; }
+        .header-actions { display: flex; gap: 8px; }
+        .btn-icon { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+        .btn-icon:active { background: rgba(255,255,255,0.3); }
+        .user-info { padding: 8px 16px; background: #fff; border-bottom: 1px solid #eee; font-size: 13px; color: #666; }
+        .filter-bar { padding: 10px 16px; background: #fff; border-bottom: 1px solid #eee; display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-bar select, .filter-bar input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .filter-bar select { min-width: 100px; }
+        .filter-bar input { flex: 1; min-width: 150px; }
+        .content { padding: 16px; }
+        .loading { text-align: center; padding: 40px; color: #999; }
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { color: #666; font-size: 15px; }
+        
+        /* 卡片 */
+        .card { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: pointer; }
+        .card:active { background: #f8f8f8; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .card-title { font-size: 15px; font-weight: 500; color: #333; }
+        .card-actions button { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; }
+        .card-meta { font-size: 13px; color: #888; margin-top: 4px; }
+        .card-stats { font-size: 13px; color: #888; margin-top: 6px; }
+        .org-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 6px; }
+        .org-badge.juzhi { background: #e3f2fd; color: #1565C0; }
+        .org-badge.yifenbu { background: #e8f5e9; color: #2e7d32; }
+        .org-badge.erfenbu { background: #fff3e0; color: #e65100; }
+        .type-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 6px; background: #f5f5f5; color: #666; }
+        .type-badge.large { background: #e3f2fd; color: #1565C0; }
+        .type-badge.special { background: #fce4ec; color: #c62828; }
+        
+        /* 浮动按钮 */
+        .fab { position: fixed; right: 20px; bottom: 24px; width: 54px; height: 54px; background: #1565C0; color: #fff; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(21,101,192,0.4); }
+        .fab:active { transform: scale(0.95); }
+        
+        /* 弹窗 */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal-content { background: #fff; border-radius: 12px; width: 90%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 17px; }
+        .modal-close { background: none; border: none; font-size: 24px; color: #999; cursor: pointer; }
+        .modal-form { padding: 20px; }
+        .modal-form .form-group { margin-bottom: 14px; }
+        .modal-form label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; }
+        .modal-form input, .modal-form select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; }
+        .modal-form input:focus, .modal-form select:focus { outline: none; border-color: #1565C0; }
+        
+        /* Toast */
+        .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0.9; }
+        
+        /* 访客提示 */
+        .guest-banner { background: #fff8e1; padding: 8px 16px; font-size: 13px; color: #f57c00; text-align: center; }
+        .guest-banner a { color: #1565C0; }
+    </style>
 </head>
 <body>
-    <!-- 登录页面 -->
+    <!-- 登录页 -->
     <div id="login-page" class="page">
         <div class="login-container">
-            <div class="logo">
-                <h1>🏗️ CZ12标设备管理</h1>
-                <p>川藏铁路雅安至林芝段 CZSCZQ-12标</p>
-            </div>
-            <form id="login-form" class="auth-form">
+            <h1>🏗️ CZ12标设备管理</h1>
+            <p>川藏铁路雅安至林芝段 CZSCZQ-12标</p>
+            <form id="login-form" class="login-form">
                 <div class="form-group">
-                    <label for="email">邮箱</label>
-                    <input type="email" id="email" placeholder="请输入邮箱" required>
+                    <label>管理密码</label>
+                    <input type="password" id="password" placeholder="请输入管理密码" required>
                 </div>
-                <div class="form-group">
-                    <label for="password">密码</label>
-                    <input type="password" id="password" placeholder="请输入密码" required>
-                </div>
-                <div class="form-group">
-                    <label for="name">姓名（首次注册填写）</label>
-                    <input type="text" id="name" placeholder="请输入姓名">
-                </div>
-                <button type="submit" class="btn-primary">登录 / 注册</button>
+                <button type="submit" class="btn-primary">登录</button>
             </form>
-            <p class="auth-switch">首次使用将自动注册</p>
-            <p style="margin-top: 12px;">
-                <a href="main.html" style="color: #1565C0; font-size: 14px;">→ 不登录，直接查看设备列表</a>
-            </p>
+            <div class="admin-note">
+                💡 初始密码: <strong>CZ12admin2026</strong><br>
+                <a href="main.html">→ 访客查看（无需登录）</a>
+            </div>
         </div>
     </div>
 
-    <!-- 主页面 - 工点列表 -->
-    <div id="main-page" class="page hidden">
+    <!-- 主页：工点列表 -->
+    <div id="main-page" class="page">
         <header class="header">
             <h2>🏗️ CZ12标设备管理</h2>
             <div class="header-actions">
@@ -50,84 +112,114 @@
                 <button id="btn-logout" class="btn-icon" title="退出">🚪</button>
             </div>
         </header>
-        
-        <div class="user-info">
-            <span id="user-name">未登录</span>
-            <span id="user-role" class="role-badge" style="margin-left: 8px;"></span>
-        </div>
-
-        <!-- 筛选栏 -->
+        <div class="user-info">🔐 管理员模式</div>
         <div class="filter-bar">
-            <select id="filter-org" class="filter-select">
+            <select id="filter-org" onchange="loadWorksites()">
                 <option value="">全部单位</option>
                 <option value="局指">局指</option>
                 <option value="一分部">一分部</option>
                 <option value="二分部">二分部</option>
             </select>
-            <select id="filter-type" class="filter-select">
+            <input type="text" id="filter-search" placeholder="🔍 搜索工点名称" oninput="loadWorksites()">
+        </div>
+        <div class="content">
+            <div id="worksite-list"></div>
+        </div>
+        <button id="btn-add-worksite" class="fab" title="添加工点">➕</button>
+    </div>
+
+    <!-- 工点详情：设备列表 -->
+    <div id="worksite-page" class="page">
+        <header class="header">
+            <button class="btn-icon" id="btn-home" title="返回">←</button>
+            <h2 id="worksite-title">工点详情</h2>
+            <div class="header-actions">
+                <button id="btn-refresh" class="btn-icon" title="刷新">🔄</button>
+            </div>
+        </header>
+        <div class="filter-bar">
+            <select id="filter-type" onchange="loadDevices(currentWsId,currentWsName)">
                 <option value="">全部分类</option>
                 <option value="大中型设备">大中型设备</option>
                 <option value="特种设备">特种设备</option>
             </select>
-            <input type="text" id="filter-search" class="filter-input" placeholder="🔍 搜索设备名称">
+            <select id="filter-status" onchange="loadDevices(currentWsId,currentWsName)">
+                <option value="">全部状态</option>
+                <option value="正常">正常</option>
+                <option value="维修中">维修中</option>
+                <option value="报废">报废</option>
+            </select>
+            <input type="text" id="filter-dev-search" placeholder="🔍 搜索设备" oninput="loadDevices(currentWsId,currentWsName)">
         </div>
-
         <div class="content">
-            <div id="worksite-list" class="list-container">
-                <!-- 工点列表动态加载 -->
-            </div>
+            <div id="device-list"></div>
         </div>
-
-        <button id="btn-add-worksite" class="fab" title="添加工点">➕</button>
+        <button id="btn-add-device" class="fab" title="添加设备">➕</button>
     </div>
 
-    <!-- 添加/编辑工点弹窗 -->
-    <div id="worksite-modal" class="modal hidden">
+    <!-- 添加工点弹窗 -->
+    <div id="ws-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="worksite-modal-title">添加工点</h3>
-                <button class="modal-close" data-close="worksite-modal">×</button>
+                <h3 id="ws-modal-title">添加工点</h3>
+                <button class="modal-close" data-close="ws-modal">×</button>
             </div>
-            <form id="worksite-form" class="modal-form">
-                <input type="hidden" id="worksite-id">
+            <form id="ws-form" class="modal-form">
                 <div class="form-group">
-                    <label for="worksite-org">所属单位</label>
-                    <select id="worksite-org" required>
+                    <label>所属单位</label>
+                    <select id="ws-org">
                         <option value="局指">局指</option>
                         <option value="一分部">一分部</option>
                         <option value="二分部">二分部</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="worksite-name">工点名称</label>
-                    <input type="text" id="worksite-name" placeholder="如：一号拌合站" required>
+                    <label>工点名称</label>
+                    <input type="text" id="ws-name" placeholder="如：一号拌合站" required>
                 </div>
-                <div id="device-limit-info" class="limit-info"></div>
                 <button type="submit" class="btn-primary">保存</button>
             </form>
         </div>
     </div>
 
-    <!-- 确认删除弹窗 -->
-    <div id="confirm-modal" class="modal hidden">
-        <div class="modal-content modal-small">
+    <!-- 添加/编辑设备弹窗 -->
+    <div id="dev-modal" class="modal hidden">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3>确认删除</h3>
+                <h3 id="dev-modal-title">添加设备</h3>
+                <button class="modal-close" data-close="dev-modal">×</button>
             </div>
-            <p id="confirm-message" class="modal-message"></p>
-            <div class="modal-actions">
-                <button class="btn-secondary" data-close="confirm-modal">取消</button>
-                <button id="confirm-ok" class="btn-danger">删除</button>
-            </div>
+            <form id="dev-form" class="modal-form">
+                <div class="form-group">
+                    <label>设备名称</label>
+                    <input type="text" id="dev-name" placeholder="如：混凝土搅拌站" required>
+                </div>
+                <div class="form-group">
+                    <label>设备类别</label>
+                    <select id="dev-type">
+                        <option value="大中型设备">大中型设备</option>
+                        <option value="特种设备">特种设备</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="dev-status">
+                        <option value="正常">正常</option>
+                        <option value="维修中">维修中</option>
+                        <option value="报废">报废</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <input type="text" id="dev-desc" placeholder="备注信息（选填）">
+                </div>
+                <button type="submit" class="btn-primary">保存</button>
+            </form>
         </div>
     </div>
 
-    <!-- Toast 提示 -->
     <div id="toast" class="toast hidden"></div>
 
-    <script src="js/supabase-sdk.min.js"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
