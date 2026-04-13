@@ -4,182 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1565C0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>CZ12标设备管理</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .header { background: #1565C0; color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+        .header h2 { font-size: 17px; flex: 1; }
+        .btn-icon { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+        .guest-banner { background: #fff8e1; padding: 8px 16px; font-size: 13px; color: #f57c00; text-align: center; }
+        .filter-bar { padding: 10px 16px; background: #fff; border-bottom: 1px solid #eee; display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-bar select, .filter-bar input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .filter-bar select { min-width: 100px; }
+        .filter-bar input { flex: 1; min-width: 150px; }
+        .content { padding: 16px; }
+        .loading { text-align: center; padding: 40px; color: #999; }
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { color: #666; font-size: 15px; }
+        .card { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: pointer; }
+        .card:active { background: #f8f8f8; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .card-title { font-size: 15px; font-weight: 500; color: #333; }
+        .card-meta { font-size: 13px; color: #888; margin-top: 4px; }
+        .card-stats { font-size: 13px; color: #888; margin-top: 6px; }
+        .org-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 6px; }
+        .org-badge.juzhi { background: #e3f2fd; color: #1565C0; }
+        .org-badge.yifenbu { background: #e8f5e9; color: #2e7d32; }
+        .org-badge.erfenbu { background: #fff3e0; color: #e65100; }
+        .type-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 6px; background: #f5f5f5; color: #666; }
+        .type-badge.large { background: #e3f2fd; color: #1565C0; }
+        .type-badge.special { background: #fce4ec; color: #c62828; }
+        .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0.9; }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-    <!-- 主页面 - 工点列表（访客模式） -->
-    <div id="main-page" class="page">
-        <header class="header">
-            <h2>🏗️ CZ12标设备管理</h2>
-            <div class="header-actions">
-                <button id="btn-refresh" class="btn-icon" title="刷新">🔄</button>
-                <a href="index.html" class="btn-icon" title="登录">🔑</a>
-            </div>
-        </header>
-        
-        <div class="user-info">
-            <span style="color: #666; font-size: 13px;">👁️ 访客模式（只读）</span>
+    <header class="header">
+        <h2>🏗️ CZ12标设备管理</h2>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="location.reload()" title="刷新">🔄</button>
+            <a href="index.html" class="btn-icon" title="管理员登录" style="text-decoration:none;">🔑</a>
         </div>
-
-        <!-- 筛选栏 -->
+    </header>
+    <div class="guest-banner">👁️ 访客模式（只读） · <a href="index.html">登录管理</a></div>
+    
+    <div class="filter-bar">
+        <select id="filter-org" onchange="loadWorksites()">
+            <option value="">全部单位</option>
+            <option value="局指">局指</option>
+            <option value="一分部">一分部</option>
+            <option value="二分部">二分部</option>
+        </select>
+        <input type="text" id="filter-search" placeholder="🔍 搜索工点" oninput="loadWorksites()">
+    </div>
+    
+    <div class="content">
+        <div id="worksite-list"></div>
+    </div>
+    
+    <div id="worksite-page" class="hidden">
+        <header class="header">
+            <button class="btn-icon" onclick="goHome()" title="返回">←</button>
+            <h2 id="worksite-title">工点详情</h2>
+        </header>
         <div class="filter-bar">
-            <select id="filter-org" class="filter-select">
-                <option value="">全部单位</option>
-                <option value="局指">局指</option>
-                <option value="一分部">一分部</option>
-                <option value="二分部">二分部</option>
-            </select>
-            <select id="filter-type" class="filter-select">
+            <select id="filter-type" onchange="loadDevices()">
                 <option value="">全部分类</option>
                 <option value="大中型设备">大中型设备</option>
                 <option value="特种设备">特种设备</option>
             </select>
-            <input type="text" id="filter-search" class="filter-input" placeholder="🔍 搜索设备名称">
+            <select id="filter-status" onchange="loadDevices()">
+                <option value="">全部状态</option>
+                <option value="正常">正常</option>
+                <option value="维修中">维修中</option>
+                <option value="报废">报废</option>
+            </select>
+            <input type="text" id="filter-dev" placeholder="🔍 搜索设备" oninput="loadDevices()">
         </div>
-
         <div class="content">
-            <div id="worksite-list" class="list-container">
-                <!-- 工点列表动态加载 -->
-            </div>
+            <div id="device-list"></div>
         </div>
     </div>
 
-    <!-- Toast 提示 -->
     <div id="toast" class="toast hidden"></div>
 
-    <script src="js/supabase-sdk.min.js"></script>
-    <script src="js/supabase-config.js"></script>
     <script>
-    /**
-     * 访客模式 - 仅查看，不登录
-     */
     const SUPABASE_URL = 'https://thvpdhayyyfgddzwffzv.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
+    let currentWsId = null, currentWsName = '';
 
-    let supabase = null;
-    let currentUser = null;
-
-    const DEVICE_LIMITS = { '局指': 100, '一分部': 300, '二分部': 300 };
-    let filterOrg = '';
-    let filterType = '';
-    let filterSearch = '';
-    let allWorksites = [];
-
-    function showToast(message, duration = 2000) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.classList.remove('hidden');
-        setTimeout(() => toast.classList.add('hidden'), duration);
+    async function req(table, opts = {}) {
+        const { method = 'GET', body, params } = opts;
+        let url = `${SUPABASE_URL}/rest/v1/${table}`;
+        if (params) url += '?' + new URLSearchParams(params).toString();
+        const res = await fetch(url, {
+            method, headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+            body: body ? JSON.stringify(body) : undefined
+        });
+        return res.json();
     }
 
-    function getDeviceLimit(org) { return DEVICE_LIMITS[org] || 999; }
-
-    function getOrgClass(org) {
-        if (org === '局指') return 'juzhi';
-        if (org === '一分部') return 'yifenbu';
-        if (org === '二分部') return 'erfenbu';
-        return '';
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 2000);
     }
-
-    async function initSupabase() {
-        if (typeof window.supabase !== 'undefined') {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            return true;
-        }
-        return false;
-    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+    function fmt(s) { if(!s) return ''; const d=new Date(s); return `${d.getMonth()+1}月${d.getDate()}日`; }
 
     async function loadWorksites() {
-        const listContainer = document.getElementById('worksite-list');
-        listContainer.innerHTML = '<div class="loading">加载中...</div>';
-
+        const list = document.getElementById('worksite-list');
+        list.innerHTML = '<div class="loading">加载中...</div>';
         try {
-            const { data: worksites, error } = await supabase
-                .from('worksites')
-                .select('*, devices(count)')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            allWorksites = worksites || [];
-
-            let filtered = allWorksites;
-            if (filterOrg) filtered = filtered.filter(ws => ws.org === filterOrg);
-            if (filterSearch) {
-                const search = filterSearch.toLowerCase();
-                filtered = filtered.filter(ws => ws.name.toLowerCase().includes(search));
-            }
-
-            if (filtered.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">🔧</div>
-                        <p>${allWorksites.length === 0 ? '暂无工点数据' : '筛选结果为空'}</p>
-                    </div>`;
-                return;
-            }
-
-            listContainer.innerHTML = filtered.map(ws => {
-                const deviceCount = ws.devices?.[0]?.count || 0;
-                const limit = getDeviceLimit(ws.org);
-                return `
-                    <div class="card" onclick="goToWorksite('${ws.id}')">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-title">
-                                    ${escapeHtml(ws.name)}
-                                    <span class="org-badge ${getOrgClass(ws.org)}">${ws.org}</span>
-                                </div>
-                                <div class="card-meta">创建于 ${formatDate(ws.created_at)}</div>
-                            </div>
-                        </div>
-                        <div class="card-stats">
-                            <span>📋 ${deviceCount} 台设备</span>
-                            <span style="color: #666">(上限 ${limit})</span>
-                        </div>
-                    </div>`;
+            const org = document.getElementById('filter-org').value;
+            const search = document.getElementById('filter-search').value.trim();
+            const params = { select: '*,devices(count)', order: 'created_at.desc' };
+            const data = await req('worksites', { params });
+            let filtered = data || [];
+            if (org) filtered = filtered.filter(w => w.org === org);
+            if (search) filtered = filtered.filter(w => w.name.toLowerCase().includes(search.toLowerCase()));
+            
+            if (!filtered.length) { list.innerHTML = '<div class="empty-state"><div class="icon">🏗️</div><p>暂无工点</p></div>'; return; }
+            list.innerHTML = filtered.map(w => {
+                const cnt = w.devices?.[0]?.count || 0;
+                const cls = w.org === '局指' ? 'juzhi' : w.org === '一分部' ? 'yifenbu' : 'erfenbu';
+                return `<div class="card" onclick="goWs('${w.id}','${esc(w.name)}')"><div class="card-title">${esc(w.name)} <span class="org-badge ${cls}">${w.org}</span></div><div class="card-meta">创建于 ${fmt(w.created_at)}</div><div class="card-stats">📋 ${cnt} 台设备</div></div>`;
             }).join('');
-
-        } catch (error) {
-            console.error('加载失败:', error);
-            listContainer.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>加载失败</p></div>`;
-        }
+        } catch (e) { list.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>加载失败</p></div>'; }
     }
 
-    function goToWorksite(id) { window.location.href = `worksite.html?id=${id}`; }
-
-    function handleFilterChange() {
-        filterOrg = document.getElementById('filter-org').value;
-        filterType = document.getElementById('filter-type').value;
-        filterSearch = document.getElementById('filter-search').value.trim();
-        loadWorksites();
+    async function loadDevices() {
+        const list = document.getElementById('device-list');
+        list.innerHTML = '<div class="loading">加载中...</div>';
+        try {
+            const type = document.getElementById('filter-type').value;
+            const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('filter-dev').value.trim();
+            const data = await req('devices', { params: { select: '*,photos(count)', eq_worksite_id: currentWsId, order: 'created_at.desc' } });
+            let filtered = data || [];
+            if (type) filtered = filtered.filter(d => d.device_type === type);
+            if (status) filtered = filtered.filter(d => d.status === status);
+            if (search) filtered = filtered.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
+            
+            const emo = { '正常': '🟢', '维修中': '🟠', '报废': '🔴' };
+            const typeCls = { '大中型设备': 'large', '特种设备': 'special' };
+            if (!filtered.length) { list.innerHTML = '<div class="empty-state"><div class="icon">🔧</div><p>暂无设备</p></div>'; return; }
+            list.innerHTML = filtered.map(d => {
+                const cnt = d.photos?.[0]?.count || 0;
+                return `<div class="card" onclick="goDev('${d.id}')"><div class="card-title">${esc(d.name)} <span class="type-badge ${typeCls[d.device_type]||''}">${d.device_type}</span></div><div class="card-meta">${emo[d.status]} ${d.status}</div>${d.description?`<div class="card-meta">${esc(d.description.substring(0,50))}</div>`:''}<div class="card-stats">📷 ${cnt}张 · ${fmt(d.created_at)}</div></div>`;
+            }).join('');
+        } catch (e) { list.innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>加载失败</p></div>'; }
     }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text || '';
-        return div.innerHTML;
-    }
+    function goWs(id, name) { currentWsId = id; currentWsName = name; document.getElementById('worksite-title').textContent = name; document.getElementById('worksite-list').parentElement.parentElement.classList.add('hidden'); document.getElementById('worksite-page').classList.remove('hidden'); loadDevices(); }
+    function goHome() { currentWsId = null; document.getElementById('worksite-page').classList.add('hidden'); document.getElementById('worksite-list').parentElement.parentElement.classList.remove('hidden'); }
+    function goDev(id) { window.location.href = `device.html?id=${id}&worksite=${currentWsId}`; }
 
-    function formatDate(dateStr) {
-        const d = new Date(dateStr);
-        return `${d.getMonth() + 1}月${d.getDate()}日`;
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        await initSupabase();
-        loadWorksites();
-
-        document.getElementById('btn-refresh')?.addEventListener('click', loadWorksites);
-        document.getElementById('filter-org')?.addEventListener('change', handleFilterChange);
-        document.getElementById('filter-type')?.addEventListener('change', handleFilterChange);
-        document.getElementById('filter-search')?.addEventListener('input', handleFilterChange);
-    });
+    document.addEventListener('DOMContentLoaded', loadWorksites);
     </script>
 </body>
 </html>
