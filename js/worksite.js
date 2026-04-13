@@ -610,16 +610,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 检查会话
+    // 检查会话（允许访客继续）
     await checkSession();
 
-    if (!currentUser) {
-        return; // 未登录，auth.js 会处理跳转
-    }
-
-    // 加载数据
+    // 加载数据（无论是否登录）
     await loadWorksiteInfo();
     await loadDevices();
+
+    // 根据权限控制界面
+    if (!currentUser) {
+        // 访客模式：隐藏编辑相关按钮
+        document.getElementById('btn-add-device').style.display = 'none';
+        document.getElementById('btn-members').style.display = 'none';
+        // 显示访客提示
+        const userInfo = document.getElementById('user-info');
+        if (userInfo) {
+            userInfo.innerHTML = '<span style="color:#666;font-size:13px;">👁️ 访客模式（只读）</span>';
+        }
+    }
 
     // 绑定事件
     document.getElementById('btn-refresh')?.addEventListener('click', () => {
