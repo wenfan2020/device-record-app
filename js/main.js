@@ -1,35 +1,30 @@
 (function(){
 'use strict';
-
 var SB_URL='https://thvpdhayyyfgddzwffzv.supabase.co';
 var SB_KEY='sb_publishable_M12fCv3XXGBkqV7iVELxhg_Ez_qaUOJ';
 var ADMIN_PWD='CZ12admin2026';
-
-var S={user:null,isAdmin:false,isApproved:false,currentWs:null,currentDev:null,cfCb:null,phDevId:null,phList:null};
+var S={user:null,isAdmin:false,currentWs:null,currentDev:null,cfCb:null,phDevId:null};
 
 function req(tbl,opt){
-  opt=opt||{};var m=opt.method||'GET',body=opt.body,params=opt.params||{};
+  opt=opt||{};
+  var m=opt.method||'GET',body=opt.body,params=opt.params||{};
   var url=SB_URL+'/rest/v1/'+tbl;
   var q=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
   if(q)url+='?'+q;
   var h={'Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY,'Content-Type':'application/json'};
   if(body)h['Prefer']='return=representation';
-  return fetch(url,{method:m,headers:h,body:body?JSON.stringify(body):undefined}).then(function(r){return r.json();}).then(function(d){
-    if(d&&typeof d==='object'&&!Array.isArray(d)&&d.items)return d.items;
-    if(Array.isArray(d))return d;
-    if(d&&typeof d==='object')return[d];
-    return[];
-  });
-}
-
-function reqOne(tbl,params){
-  params=params||{};params['limit']=1;
-  return req(tbl,{params:params}).then(function(d){return d&&d[0]||null;});
+  return fetch(url,{method:m,headers:h,body:body?JSON.stringify(body):undefined})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&typeof d==='object'&&!Array.isArray(d)&&d.items)return d.items;
+      if(Array.isArray(d))return d;
+      if(d&&typeof d==='object')return[d];
+      return[];
+    });
 }
 
 function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 function fmt(s){if(!s)return'';var d=new Date(s);return(d.getMonth()+1)+'月'+d.getDate()+'日';}
-function fmtD(s){if(!s)return'';var d=new Date(s);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function days(s){if(!s)return null;return Math.ceil((new Date(s)-new Date())/(1000*60*60*24));}
 function dot(s){return s==='正常'?'dg':s==='维修中'?'do':s==='停用'?'db':'dr';}
 function ob(s){return s==='局指'?'oj':s==='一分部'?'oy':'oe';}
@@ -60,7 +55,7 @@ function handleLogin(e){
   var email=document.getElementById('li-email').value.trim();
   var pwd=document.getElementById('li-pwd').value;
   if(pwd===ADMIN_PWD){
-    S.isAdmin=true;S.isApproved=true;
+    S.isAdmin=true;
     S.user={email:email,name:'管理员'};
     localStorage.setItem('cz12_admin','true');
     localStorage.setItem('cz12_user',JSON.stringify(S.user));
@@ -83,7 +78,7 @@ function doLogout(){
 
 function checkLogin(){
   if(localStorage.getItem('cz12_admin')==='true'){
-    S.isAdmin=true;S.isApproved=true;
+    S.isAdmin=true;
     var u=localStorage.getItem('cz12_user');
     S.user=u?JSON.parse(u):{email:'admin',name:'管理员'};
     goHome();return;
@@ -107,28 +102,26 @@ async function loadStats(){
   try{
     var wss=await req('worksites',{params:{select:'*'}});
     var devs=await req('devices',{params:{select:'*'}});
-    var totalWs=wss.length;
-    var totalDev=devs.length;
+    var totalWs=wss.length,totalDev=devs.length;
     var normal=devs.filter(function(d){return d.status==='正常';}).length;
     var repair=devs.filter(function(d){return d.status==='维修中';}).length;
     var scrap=devs.filter(function(d){return d.status==='报废'||d.status==='停用';}).length;
     var warn=0,overdue=0;
     for(var i=0;i<devs.length;i++){
-      var d=devs[i];
-      if(d.next_inspection_date){
-        var du=days(d.next_inspection_date);
+      var dv=devs[i];
+      if(dv.next_inspection_date){
+        var du=days(dv.next_inspection_date);
         if(du!==null&&du<0)overdue++;
         else if(du!==null&&du<=30)warn++;
       }
     }
     var html='<div class="stats-row">'+
       '<div class="stat-card"><div class="stat-num">'+totalWs+'</div><div class="stat-label">工点数</div></div>'+
-      '<div class="stat-card"><div class="stat-num">'+totalDev+'</div><div class="stat-label">设备总数</div></div>'+
-      '</div><div class="stats-row">'+
-      '<div class="stat-card"><div class="stat-num cg">'+normal+'</div><div class="stat-label">正常</div></div>'+
+      '<div class="stat-card"><div class="stat-num">'+totalDev+'</div><div class="stat-label">设备总数</div></div></div>'+
+      '<div class="stats-row">'+
+      '<div class="stat-card"><div class="stat-num" style="color:#4caf50">'+normal+'</div><div class="stat-label">正常</div></div>'+
       '<div class="stat-card"><div class="stat-num" style="color:#ff9800">'+repair+'</div><div class="stat-label">维修中</div></div>'+
-      '<div class="stat-card"><div class="stat-num" style="color:#f44336">'+scrap+'</div><div class="stat-label">停用/报废</div></div>'+
-      '</div>';
+      '<div class="stat-card"><div class="stat-num" style="color:#f44336">'+scrap+'</div><div class="stat-label">停用/报废</div></div></div>';
     if(warn>0||overdue>0){
       html+='<div class="stats-row">';
       if(warn>0)html+='<div class="stat-card"><div class="stat-num" style="color:#e65100">'+warn+'</div><div class="stat-label">30天内到期</div></div>';
@@ -203,9 +196,8 @@ async function saveWs(e){
       await req('worksites',{method:'POST',body:{org:org,name:name,location:loc,note:note,created_by:'00000000-0000-0000-0000-000000000000'}});
       toast('添加成功');
     }
-    modal('m-ws',false);
-    loadWsListForHome();
-  }catch(e){toast('保存失败: '+e.message);}
+    modal('m-ws',false);loadWsListForHome();
+  }catch(err){toast('保存失败: '+err.message);}
 }
 window.saveWs=saveWs;
 
@@ -239,9 +231,9 @@ async function loadWsDevs(){
         if(du!==null&&du<0)warn='error-card';
         else if(du!==null&&du<=30)warn='warn-card';
       }
-      html+='<div class="card '+warn+'" onclick="openDev(''+d.id+'')">'+
+      html+='<div class="card '+warn+'" onclick="openDev(&quot;'+d.id+'&quot;)">'+
         '<div class="card-head"><div class="card-title">'+esc(d.name)+' <span class="ot '+ot(d.device_type)+'">'+d.device_type+'</span></div>'+
-        (S.isAdmin?'<div class="card-actions"><button onclick="event.stopPropagation();editDevById(''+d.id+'')">E</button><button onclick="event.stopPropagation();delDevById(''+d.id+'',''+esc(d.name)+'')">D</button></div>':'')+
+        (S.isAdmin?'<div class="card-actions"><button onclick="event.stopPropagation();editDevById(&quot;'+d.id+'&quot;)">E</button><button onclick="event.stopPropagation();delDevById(&quot;'+d.id+'&quot;,&quot;'+esc(d.name)+'&quot;)">D</button></div>':'')+
         '</div><div class="card-meta"><span class="dot '+dot(d.status)+'"></span>'+d.status+(d.model?' · '+esc(d.model):'')+'</div>'+
         '<div class="card-foot">照片:'+cnt+'张 · '+fmt(d.created_at)+'</div></div>';
     }
@@ -320,9 +312,8 @@ async function saveDev(e){
       await req('devices',{method:'POST',body:body});
       toast('添加成功');
     }
-    modal('m-dev',false);
-    loadWsDevs();
-  }catch(e){toast('保存失败: '+e.message);}
+    modal('m-dev',false);loadWsDevs();
+  }catch(err){toast('保存失败: '+err.message);}
 }
 window.saveDev=saveDev;
 
@@ -345,7 +336,8 @@ async function openDev(id){
   if(photos&&photos.length>0){
     phHtml='<div class="sec-title">照片 ('+photos.length+')</div><div class="pgrid">';
     for(var i=0;i<photos.length;i++){
-      phHtml+='<div class="pitem"><img src="'+esc(photos[i].url)+'" onclick="window.open(''+esc(photos[i].url)+'')">'+(S.isAdmin?'<button class="pdel" onclick="delPhoto(''+photos[i].id+'')">x</button>':'')+'</div>';
+      phHtml+='<div class="pitem"><img src="'+esc(photos[i].url)+'" onclick="window.open(&quot;'+esc(photos[i].url)+'&quot;)">'+
+        (S.isAdmin?'<button class="pdel" onclick="delPhoto(&quot;'+photos[i].id+'&quot;)">x</button>':'')+'</div>';
     }
     phHtml+='</div>';
   }
@@ -356,7 +348,7 @@ async function openDev(id){
     (d.manufacturer?'<div class="card-meta">厂家: '+esc(d.manufacturer)+'</div>':'')+
     (d.description?'<div class="card-desc">'+esc(d.description)+'</div>':'')+
     '</div>'+
-    '<div class="mt8"><button class="btn btn-sm" onclick="openPhotoModal(''+id+'',''+esc(d.name)+'')">照片管理</button></div>'+
+    '<div class="mt8"><button class="btn btn-sm" onclick="openPhotoModal(&quot;'+id+'&quot;,&quot;'+esc(d.name)+'&quot;)">照片管理</button></div>'+
     phHtml;
   document.getElementById('dev-detail').innerHTML=html;
   showPage('dev');
@@ -369,11 +361,11 @@ async function openPhotoModal(devId,devName){
   var grid=document.getElementById('ph-grid');
   try{
     var photos=await req('photos',{params:{eq_device_id:devId,select:'*',order:'created_at.desc'}});
-    S.phList=photos||[];
-    if(S.phList.length===0){grid.innerHTML='<div class="empty" style="padding:20px">暂无照片</div>';}
+    if(!photos||photos.length===0){grid.innerHTML='<div class="empty" style="padding:20px">暂无照片</div>';}
     else{
-      grid.innerHTML=S.phList.map(function(p){
-        return '<div class="pitem"><img src="'+esc(p.url)+'" onclick="window.open(''+esc(p.url)+'')">'+(S.isAdmin?'<button class="pdel" onclick="delPhoto(''+p.id+'')">x</button>':'')+'</div>';
+      grid.innerHTML=photos.map(function(p){
+        return '<div class="pitem"><img src="'+esc(p.url)+'" onclick="window.open(&quot;'+esc(p.url)+'&quot;)">'+
+          (S.isAdmin?'<button class="pdel" onclick="delPhoto(&quot;'+p.id+'&quot;)">x</button>':'')+'</div>';
       }).join('');
     }
   }catch(e){grid.innerHTML='<div class="empty" style="padding:20px">加载失败</div>';}
@@ -392,10 +384,9 @@ function handlePhUpload(e){
   var reader=new FileReader();
   reader.onload=function(ev){
     var dataUrl=ev.target.result;
-    req('photos',{method:'POST',body:{device_id:devId,url:dataUrl,created_by:'00000000-0000-0000-0000-000000000000'}}).then(function(){
-      toast('上传成功');
-      openPhotoModal(devId,document.getElementById('ph-dev-name').textContent);
-    }).catch(function(e){toast('上传失败');});
+    req('photos',{method:'POST',body:{device_id:devId,url:dataUrl,created_by:'00000000-0000-0000-0000-000000000000'}})
+      .then(function(){toast('上传成功');openPhotoModal(devId,document.getElementById('ph-dev-name').textContent);})
+      .catch(function(){toast('上传失败');});
   };
   reader.readAsDataURL(files[0]);
 }
@@ -464,9 +455,5 @@ function showPage(id){
   window.scrollTo(0,0);
 }
 
-function goHome(){showPage('home');loadStats();loadWsListForHome();updateUserDisplay();}
-window.goHome=goHome;
-
 document.addEventListener('DOMContentLoaded',checkLogin);
-
 })();
