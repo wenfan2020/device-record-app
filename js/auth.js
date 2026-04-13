@@ -5,16 +5,26 @@
 // 当前用户
 let currentUser = null;
 
+// 获取 supabase 客户端（兼容 SDK 加载时机）
+function getSupabase() {
+    if (typeof supabase !== 'undefined' && supabase && supabase.auth) {
+        return supabase;
+    }
+    if (typeof window.supabase !== 'undefined' && window.supabase && window.supabase.auth) {
+        return window.supabase;
+    }
+    return null;
+}
+
 /**
  * 显示提示信息
  */
 function showToast(message, duration = 2000) {
     const toast = document.getElementById('toast');
+    if (!toast) return;
     toast.textContent = message;
     toast.classList.remove('hidden');
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, duration);
+    setTimeout(() => toast.classList.add('hidden'), duration);
 }
 
 /**
@@ -26,19 +36,15 @@ function updateUIForAuthState(user) {
     const userNameSpan = document.getElementById('user-name');
 
     if (user) {
-        // 已登录
         currentUser = user;
-        loginPage.classList.add('hidden');
-        mainPage.classList.remove('hidden');
-        userNameSpan.textContent = user.user_metadata?.name || user.email;
-        
-        // 加载工点列表
+        loginPage?.classList.add('hidden');
+        mainPage?.classList.remove('hidden');
+        if (userNameSpan) userNameSpan.textContent = user.user_metadata?.name || user.email;
         loadWorksites();
     } else {
-        // 未登录
         currentUser = null;
-        loginPage.classList.remove('hidden');
-        mainPage.classList.add('hidden');
+        loginPage?.classList.remove('hidden');
+        mainPage?.classList.add('hidden');
     }
 }
 
@@ -46,10 +52,34 @@ function updateUIForAuthState(user) {
  * 监听登录状态变化
  */
 function setupAuthListener() {
-    supabase.auth.onAuthStateChange((event, session) => {
+    const sb = getSupabase();
+    if (!sb) {
+        console.warn('Supabase 未初始化，延迟设置监听器');
+        setTimeout(setupAuthListener, 500);
+        return;
+    }
+    sb.auth.onAuthStateChange((event, session) => {
         console.log('Auth 状态变化:', event);
         updateUIForAuthState(session?.user || null);
     });
+}
+
+/**
+ * 检查当前会话
+ */
+async function checkSession() {
+    const sb = getSupabase();
+    if (!sb) {
+        console.warn('Supabase 未初始化，延迟检查会话');
+        setTimeout(checkSession, 500);
+        return;
+    }
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        updateUIForAuthState(session?.user || null);
+    } catch (error) {
+        console.error('会话检查失败:', error);
+    }
 }
 
 /**
@@ -57,6 +87,12 @@ function setupAuthListener() {
  */
 async function handleLogin(e) {
     e.preventDefault();
+    
+    const sb = getSupabase();
+    if (!sb) {
+        showToast('系统加载中，请刷新页面');
+        return;
+    }
     
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -73,15 +109,14 @@ async function handleLogin(e) {
 
     try {
         // 先尝试登录
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await sb.auth.signInWithPassword({
             email: email,
             password: password
         });
 
         if (error) {
-            // 登录失败，可能是新用户，尝试注册
             if (error.message.includes('Invalid login credentials')) {
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                const { data: signUpData, error: signUpError } = await sb.auth.signUp({
                     email: email,
                     password: password,
                     options: {
@@ -91,10 +126,7 @@ async function handleLogin(e) {
                     }
                 });
 
-                if (signUpError) {
-                    throw signUpError;
-                }
-
+                if (signUpError) throw signUpError;
                 showToast('注册成功，已自动登录');
             } else {
                 throw error;
@@ -115,7 +147,12 @@ async function handleLogin(e) {
  * 退出登录
  */
 async function handleLogout() {
-    const { error } = await supabase.auth.signOut();
+    const sb = getSupabase();
+    if (!sb) {
+        showToast('系统加载中');
+        return;
+    }
+    const { error } = await sb.auth.signOut();
     if (error) {
         showToast('退出失败');
     } else {
@@ -123,15 +160,7 @@ async function handleLogout() {
     }
 }
 
-/**
- * 检查当前会话
- */
-async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    updateUIForAuthState(session?.user || null);
-}
-
-// 初始化认证监听
+// 初始化认证监听和会话检查
 document.addEventListener('DOMContentLoaded', () => {
     // 绑定登录表单
     const loginForm = document.getElementById('login-form');
@@ -144,4 +173,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
     }
+    
+    // 延迟检查会话，确保 SDK 已加载
+    setTimeout(() => {
+        setupAuthListener();
+        checkSession();
+    }, 300);
 });
